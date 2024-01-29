@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { fnName, readLastLine } = require('../utils/utils');
-const { getAvailableUniswapV2, getUniV2DataforBlockInterval, computeLiquidityUniV2Pool, computeUniswapV2Price } = require('./uniswap.v2.utils');
+const { getAvailablepancakeswapV2, getUniV2DataforBlockInterval, computeLiquidityUniV2Pool, computepancakeswapV2Price } = require('./pancakeswap.v2.utils');
 const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
 const { DATA_DIR } = require('../utils/constants');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
@@ -9,14 +9,14 @@ const { truncateUnifiedFiles } = require('../data.interface/unified.truncator');
 
 
 async function generateUnifiedFileUniv2(endBlock) {
-    const available = getAvailableUniswapV2(DATA_DIR);
+    const available = getAvailablepancakeswapV2(DATA_DIR);
 
-    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'uniswapv2'))) {
-        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'uniswapv2'), {recursive: true});
+    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'pancakeswapv2'))) {
+        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'pancakeswapv2'), {recursive: true});
     }
 
-    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv2'))) {
-        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv2'), {recursive: true});
+    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv2'))) {
+        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv2'), {recursive: true});
     }
 
     for(const base of Object.keys(available)) {
@@ -26,14 +26,14 @@ async function generateUnifiedFileUniv2(endBlock) {
     }
 
     const blockLastYear = await getBlocknumberForTimestamp(Math.round(Date.now()/1000) - 365 * 24 * 60 * 60);
-    truncateUnifiedFiles('uniswapv2', blockLastYear);
+    truncateUnifiedFiles('pancakeswapv2', blockLastYear);
 }
 
 async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
     console.log(`${fnName()}: create/append for ${fromSymbol} ${toSymbol}`);
     const unifiedFilename = `${fromSymbol}-${toSymbol}-unified-data.csv`;
-    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'uniswapv2', unifiedFilename);
-    const unifiedFullFilenamePrice = path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv2', unifiedFilename);
+    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'pancakeswapv2', unifiedFilename);
+    const unifiedFullFilenamePrice = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv2', unifiedFilename);
     let sinceBlock = 0;
     let toWrite = [];
     let toWritePrice = [];
@@ -60,7 +60,7 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
     for(const [blockNumber, data] of Object.entries(univ2Data)) {
         const normalizedFrom = normalize(data.fromReserve, fromConf.decimals);
         const normalizedTo = normalize(data.toReserve, toConf.decimals);
-        const price = computeUniswapV2Price(normalizedFrom, normalizedTo);
+        const price = computepancakeswapV2Price(normalizedFrom, normalizedTo);
         
         // only save every 50 blocks
         if(lastSavedBlock + 50 > blockNumber) {

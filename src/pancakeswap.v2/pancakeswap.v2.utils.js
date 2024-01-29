@@ -8,7 +8,7 @@ const path = require('path');
  * @param {number} normalizedTo 
  * @returns 
  */
-function computeUniswapV2Price(normalizedFrom, normalizedTo) {
+function computepancakeswapV2Price(normalizedFrom, normalizedTo) {
     if(normalizedFrom == 0) {
         return 0;
     }
@@ -28,7 +28,7 @@ function computeUniswapV2Price(normalizedFrom, normalizedTo) {
 function getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, fromBlock, toBlock) {
     const fileInfo = getUniV2DataFile(DATA_DIR, fromSymbol, toSymbol);
     if(!fileInfo) {
-        throw new Error(`Could not find pool data for ${fromSymbol}/${toSymbol} on uniswapv2`);
+        throw new Error(`Could not find pool data for ${fromSymbol}/${toSymbol} on pancakeswapv2`);
     }
     // load the file in RAM
     const fileContent = fs.readFileSync(fileInfo.path, 'utf-8').split('\n');
@@ -66,7 +66,7 @@ function getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, fromBlock,
  * @returns 
  */
 function getUniV2DataFile(dataDir, fromSymbol, toSymbol) {
-    let filePath = path.join(dataDir, 'uniswapv2', `${fromSymbol}-${toSymbol}_uniswapv2.csv`);
+    let filePath = path.join(dataDir, 'pancakeswapv2', `${fromSymbol}-${toSymbol}_pancakeswapv2.csv`);
     let reverse = false;
 
     if(fs.existsSync(filePath)) {
@@ -75,7 +75,7 @@ function getUniV2DataFile(dataDir, fromSymbol, toSymbol) {
             reverse: reverse
         };
     } else {
-        filePath = path.join(dataDir, 'uniswapv2',`${toSymbol}-${fromSymbol}_uniswapv2.csv`);
+        filePath = path.join(dataDir, 'pancakeswapv2',`${toSymbol}-${fromSymbol}_pancakeswapv2.csv`);
         reverse = true;
         if(fs.existsSync(filePath)) {
             return {
@@ -142,9 +142,9 @@ function calculateYReceived(x0, y0, xSell) {
  * @param {string} dataDir 
  * @returns {{[base: string]: string[]}}
  */
-function getAvailableUniswapV2(dataDir) {
+function getAvailablepancakeswapV2(dataDir) {
     const available = {};
-    const files = fs.readdirSync(`${dataDir}/uniswapv2/`).filter(_ => _.endsWith('.csv'));
+    const files = fs.readdirSync(`${dataDir}/pancakeswapv2/`).filter(_ => _.endsWith('.csv'));
     for(const file of files) {
         const pair = file.split('_')[0];
 
@@ -163,4 +163,4 @@ function getAvailableUniswapV2(dataDir) {
     return available;
 }
 
-module.exports = { computeUniswapV2Price, computeLiquidityUniV2Pool, getAvailableUniswapV2, getUniV2DataforBlockInterval };
+module.exports = { computepancakeswapV2Price, computeLiquidityUniV2Pool, getAvailablepancakeswapV2, getUniV2DataforBlockInterval };

@@ -3,12 +3,12 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const univ2Config = require('./uniswap.v2.config');
+const univ2Config = require('./pancakeswap.v2.config');
 const { tokens } = require('../global.config');
 const { GetContractCreationBlockNumber, getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { sleep, fnName, roundTo, readLastLine, retry } = require('../utils/utils');
 const { RecordMonitoring } = require('../utils/monitoring');
-const { generateUnifiedFileUniv2 } = require('./uniswap.v2.unified.generator');
+const { generateUnifiedFileUniv2 } = require('./pancakeswap.v2.unified.generator');
 const { DATA_DIR } = require('../utils/constants');
 const path = require('path');
 
@@ -18,16 +18,16 @@ const MINIMUM_TO_APPEND = process.env.MINIMUM_TO_APPEND || 5000;
 const runEverySec = 60 * 60;
 
 /**
- * Fetch all liquidity history from UniswapV2 pairs
- * The pairs to fetch are read from the config file './uniswap.v2.config'
+ * Fetch all liquidity history from pancakeswapV2 pairs
+ * The pairs to fetch are read from the config file './pancakeswap.v2.config'
  */
-async function UniswapV2HistoryFetcher(onlyOnce = false) {
+async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
     // eslint-disable-next-line no-constant-condition
     while(true) {
         const start = Date.now();
         try {
             await RecordMonitoring({
-                'name': 'UniswapV2 Fetcher',
+                'name': 'pancakeswapV2 Fetcher',
                 'status': 'running',
                 'lastStart': Math.round(start/1000),
                 'runEvery': runEverySec
@@ -36,8 +36,8 @@ async function UniswapV2HistoryFetcher(onlyOnce = false) {
                 throw new Error('Could not find RPC_URL env variable');
             }
 
-            if(!fs.existsSync(path.join(DATA_DIR, 'uniswapv2'))) {
-                fs.mkdirSync(path.join(DATA_DIR, 'uniswapv2'), {recursive: true});
+            if(!fs.existsSync(path.join(DATA_DIR, 'pancakeswapv2'))) {
+                fs.mkdirSync(path.join(DATA_DIR, 'pancakeswapv2'), {recursive: true});
             }
 
             console.log(`${fnName()}: starting`);
@@ -45,9 +45,9 @@ async function UniswapV2HistoryFetcher(onlyOnce = false) {
             const currentBlock = await web3Provider.getBlockNumber() - 10;
             const stalePools = [];
             const poolsData = [];
-            for(const pairKey of univ2Config.uniswapV2Pairs) {
+            for(const pairKey of univ2Config.pancakeswapV2Pairs) {
                 console.log(`${fnName()}: Start fetching pair ` + pairKey);
-                const fetchResult = await FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/uniswapv2/${pairKey}_uniswapv2.csv`, currentBlock, 0);
+                const fetchResult = await FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, 0);
                 console.log(`${fnName()}: End fetching pair ` + pairKey);
                 if(fetchResult.isStale) {
                     stalePools.push(pairKey);
@@ -68,20 +68,20 @@ async function UniswapV2HistoryFetcher(onlyOnce = false) {
             }
 
             const fetcherResult = {
-                dataSourceName: 'uniswapv2',
+                dataSourceName: 'pancakeswapv2',
                 lastBlockFetched: currentBlock,
                 lastRunTimestampMs: Date.now(),
                 poolsFetched: poolsData
             };
 
-            fs.writeFileSync(path.join(DATA_DIR, 'uniswapv2', 'uniswapv2-fetcher-result.json'), JSON.stringify(fetcherResult, null, 2));
+            fs.writeFileSync(path.join(DATA_DIR, 'pancakeswapv2', 'pancakeswapv2-fetcher-result.json'), JSON.stringify(fetcherResult, null, 2));
             
             await generateUnifiedFileUniv2(currentBlock);
-            console.log('UniswapV2HistoryFetcher: ending');
+            console.log('pancakeswapV2HistoryFetcher: ending');
         
             const runEndDate = Math.round(Date.now()/1000);
             await RecordMonitoring({
-                'name': 'UniswapV2 Fetcher',
+                'name': 'pancakeswapV2 Fetcher',
                 'status': 'success',
                 'lastEnd': runEndDate,
                 'lastDuration': runEndDate - Math.round(start/1000),
@@ -91,7 +91,7 @@ async function UniswapV2HistoryFetcher(onlyOnce = false) {
             const errorMsg = `An exception occurred: ${error}`;
             console.log(errorMsg);
             await RecordMonitoring({
-                'name': 'UniswapV2 Fetcher',
+                'name': 'pancakeswapV2 Fetcher',
                 'status': 'error',
                 'error': errorMsg
             });
@@ -112,7 +112,7 @@ async function UniswapV2HistoryFetcher(onlyOnce = false) {
 }
 
 /**
- * Fetches all history for a uniswap v2 pair (a pool)
+ * Fetches all history for a pancakeswap v2 pair (a pool)
  * Store the results into a csv file, and use the file as start for a run
  * if the file does not exists, create it and start at the contract deploy block
  * if the file exists, start at the last block fetched + 1
@@ -125,21 +125,21 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     const token0Address = tokens[token0Symbol].address;
     const token1Symbol = pairKey.split('-')[1];
     const token1Address = tokens[token1Symbol].address;
-    const factoryContract = new ethers.Contract(univ2Config.uniswapV2FactoryAddress, univ2Config.uniswapV2FactoryABI, web3Provider);
+    const factoryContract = new ethers.Contract(univ2Config.pancakeswapV2FactoryAddress, univ2Config.pancakeswapV2FactoryABI, web3Provider);
     const pairAddress = await retry(factoryContract.getPair, [token0Address, token1Address]);
 
     if(pairAddress == ethers.constants.AddressZero) {
         throw new Error(`Could not find address with tokens  ${token0Symbol} and ${token1Symbol}`);
     }
 
-    const pairContract = new ethers.Contract(pairAddress, univ2Config.uniswapV2PairABI, web3Provider);
+    const pairContract = new ethers.Contract(pairAddress, univ2Config.pancakeswapV2PairABI, web3Provider);
     const contractToken0 = await retry(pairContract.token0, []);
     if(contractToken0.toLowerCase() != token0Address.toLowerCase()) {
-        throw new Error('Order mismatch between configuration and uniswapv2 pair');
+        throw new Error('Order mismatch between configuration and pancakeswapv2 pair');
     }
     const contractToken1 = await retry(pairContract.token1, []);
     if(contractToken1.toLowerCase() != token1Address.toLowerCase()) {
-        throw new Error('Order mismatch between configuration and uniswapv2 pair');
+        throw new Error('Order mismatch between configuration and pancakeswapv2 pair');
     }
 
     const initBlockStep = 500000;
@@ -192,6 +192,7 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
             if(cptError >= 100) {
                 throw new Error('Too many errors');
             }
+            await sleep(1000);
             continue;
         }
 
@@ -244,7 +245,13 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
             // try to find the blockstep to reach 8000 events per call as the RPC limit is 10 000, 
             // this try to change the blockstep by increasing it when the pool is not very used
             // or decreasing it when the pool is very used
-            blockStep = Math.min(1000000, Math.round(blockStep * 8000 / events.length));
+            const newBlockStep = Math.min(1000000, Math.round(blockStep * 8000 / events.length));
+            if(newBlockStep > blockStep*2){
+                blockStep = blockStep*2;
+            }
+            else{
+                blockStep = newBlockStep;
+            }
         }
 
         fromBlock = toBlock +1;
@@ -259,4 +266,6 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     return {isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress}
 }
 
-module.exports = { UniswapV2HistoryFetcher };
+pancakeswapV2HistoryFetcher();
+
+module.exports = { pancakeswapV2HistoryFetcher };
