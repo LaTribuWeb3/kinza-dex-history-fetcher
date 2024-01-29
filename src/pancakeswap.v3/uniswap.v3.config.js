@@ -8,64 +8,64 @@ const pancakeswapFactoryV3Address = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865"
 
 const pairsToFetch = [
   {
-    "token0": "DAI",
-    "token1": "WETH"
+    "token0": "USDT",
+    "token1": "WBNB"
   },
   {
-    "token0": "DAI",
+    "token0": "ETH",
+    "token1": "BTCB"
+  },
+  {
+    "token0": "USDT",
     "token1": "USDC"
   },
   {
-    "token0": "WBTC",
-    "token1": "DAI"
+    "token0": "BTCB",
+    "token1": "WBNB"
   },
   {
-    "token0": "WBTC",
-    "token1": "WETH"
+    "token0": "USDT",
+    "token1": "BTCB"
   },
   {
-    "token0": "WBTC",
+    "token0": "ETH",
+    "token1": "WBNB"
+  },
+  {
+    "token0": "USDT",
+    "token1": "FDUSD"
+  },
+  {
+    "token0": "ETH",
     "token1": "USDC"
   },
   {
-    "token0": "USDC",
-    "token1": "WETH"
+    "token0": "SnBNB",
+    "token1": "WBNB"
   },
   {
-    "token0": "UNI",
-    "token1": "WETH"
+    "token0": "ETH",
+    "token1": "wBETH"
   },
   {
-    "token0": "UNI",
-    "token1": "USDC"
+    "token0": "TUSD",
+    "token1": "USDT"
   },
   {
-    "token0": "UNI",
-    "token1": "WBTC"
+    "token0": "HAY",
+    "token1": "WBNB"
   },
   {
-    "token0": "UNI",
-    "token1": "DAI"
+    "token0": "HAY",
+    "token1": "ETH"
   },
   {
-    "token0": "MKR",
-    "token1": "WETH"
+    "token0": "HAY",
+    "token1": "USDT"
   },
   {
-    "token0": "MKR",
-    "token1": "USDC"
-  },
-  {
-    "token0": "DAI",
-    "token1": "MKR"
-  },
-  {
-    "token0": "MANA",
-    "token1": "WETH"
-  },
-  {
-    "token0": "MANA",
-    "token1": "USDC"
+    "token0": "BTCB",
+    "token1": "FDUSD"
   },
   {
     "token0": "SNX",
