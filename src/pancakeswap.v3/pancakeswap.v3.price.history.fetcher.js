@@ -4,7 +4,7 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const univ3Config = require('./uniswap.v3.config');
+const univ3Config = require('./pancakeswap.v3.config');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
 const { fnName, sleep, roundTo, readLastLine } = require('../utils/utils');
 const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
@@ -17,17 +17,17 @@ const { providers } = require('@0xsequence/multicall');
 
 const RPC_URL = process.env.RPC_URL;
 
-const UNISWAPV3_FEES = [100, 500, 3000, 10000];
+const pancakeswapV3_FEES = [100, 500, 3000, 10000];
 
 const runEverySec = 60 * 60;
 
-const WORKER_NAME = 'UniswapV3 Price Fetcher';
+const WORKER_NAME = 'pancakeswapV3 Price Fetcher';
 
 /**
- * Fetch all liquidity history from UniswapV3 pairs
- * The pairs to fetch are read from the config file './uniswap.v3.config'
+ * Fetch all liquidity history from pancakeswapV3 pairs
+ * The pairs to fetch are read from the config file './pancakeswap.v3.config'
  */
-async function UniswapV3PriceHistoryFetcher(onlyOnce = false) {
+async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
     // eslint-disable-next-line no-constant-condition
     while(true) {
         const start = Date.now();
@@ -43,14 +43,14 @@ async function UniswapV3PriceHistoryFetcher(onlyOnce = false) {
                 throw new Error('Could not find RPC_URL env variable');
             }
 
-            if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv3'))) {
-                fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv3'), {recursive: true});
+            if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3'))) {
+                fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3'), {recursive: true});
             }
 
             console.log(`${fnName()}: starting`);
             const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
             const multicallProvider = new providers.MulticallProvider(web3Provider);
-            const univ3Factory = new Contract(univ3Config.uniswapFactoryV3Address, univ3Config.uniswapFactoryV3Abi, multicallProvider);
+            const univ3Factory = new Contract(univ3Config.pancakeswapFactoryV3Address, univ3Config.pancakeswapFactoryV3Abi, multicallProvider);
             const currentBlock = await web3Provider.getBlockNumber() - 10;
 
             console.log(`${fnName()}: getting pools to fetch`);
@@ -72,8 +72,8 @@ async function UniswapV3PriceHistoryFetcher(onlyOnce = false) {
             const stalePairs = [];
             let promises = [];
             for(const groupedFetchConfig of Object.values(poolsToFetchGroupedByPair)) {
-                promises.push(FetchUniswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock));
-                // const lastBlockWithData = await FetchUniswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
+                promises.push(FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock));
+                // const lastBlockWithData = await FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
                 if(promises.length >= 5) {
                     const results = await Promise.all(promises);
                     for(const result of results) {
@@ -136,7 +136,7 @@ async function getAllPoolsToFetch(univ3Factory) {
     // find existing pools via multicall
     const promises = [];
     for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of UNISWAPV3_FEES) {
+        for (const fee of pancakeswapV3_FEES) {
             const token0 = getConfTokenBySymbol(pairToFetch.token0);
             if (!token0) {
                 throw new Error('Cannot find token in global config with symbol: ' + pairToFetch.token0);
@@ -153,7 +153,7 @@ async function getAllPoolsToFetch(univ3Factory) {
     await Promise.all(promises);
     let promiseIndex = 0;
     for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of UNISWAPV3_FEES) {
+        for (const fee of pancakeswapV3_FEES) {
             const poolAddress = await promises[promiseIndex];
             if (poolAddress == ethers.constants.AddressZero) {
                 console.log(`${fnName()}[${pairToFetch.token0}-${pairToFetch.token1}-${fee}]: pool does not exist`);
@@ -171,7 +171,7 @@ async function getAllPoolsToFetch(univ3Factory) {
     return poolsToFetch;
 }
 
-async function FetchUniswapV3PriceHistoryForPair(pairToFetch, pools, web3Provider, currentBlock) {
+async function FetchpancakeswapV3PriceHistoryForPair(pairToFetch, pools, web3Provider, currentBlock) {
     // the idea is to fetch events for every 100k blocks for every pools, 
     // then sort the results by amount of swap in this 100k blocks interval
     // meaning we will store the prices of each pools but every time a trade occured in the same block
@@ -183,8 +183,8 @@ async function FetchUniswapV3PriceHistoryForPair(pairToFetch, pools, web3Provide
     const label = `[${token0Conf.symbol}-${token1Conf.symbol}]`;
 
     // get the first block to fetch
-    const priceHistoryFilename = path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv3', `${pairToFetch.token0}-${pairToFetch.token1}-unified-data.csv`);
-    const priceHistoryReversedFilename = path.join(DATA_DIR, 'precomputed', 'price', 'uniswapv3', `${pairToFetch.token1}-${pairToFetch.token0}-unified-data.csv`);
+    const priceHistoryFilename = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3', `${pairToFetch.token0}-${pairToFetch.token1}-unified-data.csv`);
+    const priceHistoryReversedFilename = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3', `${pairToFetch.token1}-${pairToFetch.token0}-unified-data.csv`);
 
     let sinceBlock = 0;
     if (fs.existsSync(priceHistoryFilename) && fs.existsSync(priceHistoryReversedFilename)) {
@@ -224,7 +224,7 @@ async function FetchUniswapV3PriceHistoryForPair(pairToFetch, pools, web3Provide
     // initializes the pools contracts
     const contracts = {};
     for(const poolAddress of pools) {
-        contracts[poolAddress] = new Contract(poolAddress, univ3Config.uniswapV3PairAbi, web3Provider);
+        contracts[poolAddress] = new Contract(poolAddress, univ3Config.pancakeswapV3PairAbi, web3Provider);
     }
 
     const step = 100_000;
@@ -368,5 +368,5 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
     return swapResults;
 }
 
-// UniswapV3PriceHistoryFetcher(true);
-module.exports = { UniswapV3PriceHistoryFetcher };
+// pancakeswapV3PriceHistoryFetcher(true);
+module.exports = { pancakeswapV3PriceHistoryFetcher };

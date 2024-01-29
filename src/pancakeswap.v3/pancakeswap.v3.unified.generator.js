@@ -1,16 +1,16 @@
 const path = require('path');
 const fs = require('fs');
 const { fnName, readLastLine } = require('../utils/utils');
-const { getAvailableUniswapV3, getUniV3DataforBlockInterval } = require('./uniswap.v3.utils');
+const { getAvailablepancakeswapV3, getUniV3DataforBlockInterval } = require('./pancakeswap.v3.utils');
 const { DATA_DIR } = require('../utils/constants');
 const { truncateUnifiedFiles } = require('../data.interface/unified.truncator');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 
 async function generateUnifiedFileUniv3(endBlock) {
-    const available = getAvailableUniswapV3(DATA_DIR);
+    const available = getAvailablepancakeswapV3(DATA_DIR);
 
-    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'uniswapv3'))) {
-        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'uniswapv3'), {recursive: true});
+    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'pancakeswapv3'))) {
+        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'pancakeswapv3'), {recursive: true});
     }
 
     const blockLastYear = await getBlocknumberForTimestamp(Math.round(Date.now()/1000) - 365 * 24 * 60 * 60);
@@ -20,13 +20,13 @@ async function generateUnifiedFileUniv3(endBlock) {
         }
     }
 
-    truncateUnifiedFiles('uniswapv3', blockLastYear);
+    truncateUnifiedFiles('pancakeswapv3', blockLastYear);
 }
 
 async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol, blockLastYear) {
     console.log(`${fnName()}: create/append for ${fromSymbol} ${toSymbol}`);
     const unifiedFilename = `${fromSymbol}-${toSymbol}-unified-data.csv`;
-    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'uniswapv3', unifiedFilename);
+    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'pancakeswapv3', unifiedFilename);
     let sinceBlock = 0;
     if(!fs.existsSync(unifiedFullFilename)) {
         fs.writeFileSync(unifiedFullFilename, 'blocknumber,price,slippagemap\n');

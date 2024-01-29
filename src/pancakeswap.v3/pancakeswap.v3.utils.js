@@ -66,7 +66,7 @@ function getPriceFromSqrt(sqrtPriceX96, token0Decimals, token1Decimals) {
 }
 
 // function test() {
-//     const latestData = JSON.parse(fs.readFileSync('data/uniswapv3/wstETH-WETH-100-latestdata.json', 'utf-8'));
+//     const latestData = JSON.parse(fs.readFileSync('data/pancakeswapv3/wstETH-WETH-100-latestdata.json', 'utf-8'));
 //     const slippages = getSlippages(latestData.currentTick, latestData.tickSpacing, latestData.currentSqrtPriceX96, latestData.ticks, 18, 18);
 //     fs.writeFileSync('wstETH-ETHSlippages.json', JSON.stringify(slippages, null, 2));
 // }
@@ -239,9 +239,9 @@ function GetAmountYDumpable(currentTick, tickSpacing, liquidities,  token0Decima
     return result;
 }
 
-function getAvailableUniswapV3(dataDir) {
+function getAvailablepancakeswapV3(dataDir) {
     const available = {};
-    const files = fs.readdirSync(`${dataDir}/uniswapv3/`).filter(_ => _.endsWith('.csv'));
+    const files = fs.readdirSync(`${dataDir}/pancakeswapv3/`).filter(_ => _.endsWith('.csv'));
     for(const file of files) {
         const splitted = file.split('-');
 
@@ -268,7 +268,7 @@ function getAvailableUniswapV3(dataDir) {
 
 function getUniV3DataFiles(dataDir, fromSymbol, toSymbol) {
     
-    const allUniv3Files = fs.readdirSync(path.join(dataDir, 'uniswapv3')).filter(_ => _.endsWith('.csv'));
+    const allUniv3Files = fs.readdirSync(path.join(dataDir, 'pancakeswapv3')).filter(_ => _.endsWith('.csv'));
     
     let searchKey = `${fromSymbol}-${toSymbol}`;
     let reverse = false;
@@ -408,7 +408,7 @@ function getUniV3DataContents(selectedFiles, dataDir, minBlock=0) {
     for (let i = 0; i < selectedFiles.length; i++) {
         const selectedFile = selectedFiles[i];
         dataContents[selectedFiles[i]] = {};
-        const fileContent = fs.readFileSync(path.join(dataDir, 'uniswapv3', selectedFile), 'utf-8').split('\n')
+        const fileContent = fs.readFileSync(path.join(dataDir, 'pancakeswapv3', selectedFile), 'utf-8').split('\n')
             // remove first line, which is headers
             .splice(1);
 
@@ -451,4 +451,4 @@ function getUniV3DataContents(selectedFiles, dataDir, minBlock=0) {
     return dataContents;
 }
 
-module.exports = { getPriceNormalized, getSlippages, getAvailableUniswapV3, getUniV3DataforBlockInterval, getPriceFromSqrt };
+module.exports = { getPriceNormalized, getSlippages, getAvailablepancakeswapV3, getUniV3DataforBlockInterval, getPriceFromSqrt };
