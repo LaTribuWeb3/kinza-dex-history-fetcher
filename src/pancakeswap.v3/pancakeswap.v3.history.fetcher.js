@@ -22,7 +22,7 @@ const CONSTANT_BLOCK_INTERVAL = 50;
 
 const RPC_URL = process.env.RPC_URL;
 
-const pancakeswapV3_FEES = [100, 500, 3000, 10000];
+const pancakeswapV3_FEES = [100, 500, 2500, 10000];
 
 const runEverySec = 60 * 60;
 
