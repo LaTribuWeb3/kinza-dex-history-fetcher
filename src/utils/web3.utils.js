@@ -25,10 +25,19 @@ async function GetContractCreationBlockNumber(web3Provider, contractAddress) {
     const etherscanResponse = await retry(axios.get, [etherscanUrl]);
     lastCallEtherscan = Date.now();
 
-    const receipt = await web3Provider.getTransactionReceipt(etherscanResponse.data.result[0].txHash);
+    const receipt = await retry(getTxHash, [web3Provider, etherscanResponse.data.result[0].txHash]);
     // console.log(receipt);
     console.log(`${fnName()}: returning blocknumber: ${receipt.blockNumber}`);
     return receipt.blockNumber;
+}
+
+async function getTxHash(web3Provider, txHash) {
+    const receipt = await web3Provider.getTransactionReceipt(txHash);
+    if(!receipt) {
+        throw new Error('Cannot get receipt');
+    }
+
+    return receipt;
 }
 
 /**

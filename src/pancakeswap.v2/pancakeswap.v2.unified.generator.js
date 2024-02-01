@@ -63,9 +63,9 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
         const price = computepancakeswapV2Price(normalizedFrom, normalizedTo);
         
         // only save every 50 blocks
-        if(lastSavedBlock + 50 > blockNumber) {
+        if(lastSavedBlock + 200 > blockNumber) {
             // just save the price
-            toWritePrice.push(`${blockNumber},${price}\n`);
+            // toWritePrice.push(`${blockNumber},${price}\n`);
             continue;
         }
         

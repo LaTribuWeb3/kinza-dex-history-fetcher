@@ -6,7 +6,7 @@ dotenv.config();
 
 const univ3Config = require('./pancakeswap.v3.config');
 const { GetContractCreationBlockNumber, getBlocknumberForTimestamp } = require('../utils/web3.utils');
-const { fnName, logFnDuration, sleep, roundTo } = require('../utils/utils');
+const { fnName, logFnDuration, sleep, roundTo, retry } = require('../utils/utils');
 const { getConfTokenBySymbol } = require('../utils/token.utils');
 const { getPriceNormalized, getSlippages } = require('./pancakeswap.v3.utils');
 const { default: BigNumber } = require('bignumber.js');
@@ -18,7 +18,7 @@ const { providers } = require('@0xsequence/multicall');
 
 const CONSTANT_1e18 = new BigNumber(10).pow(18);
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
-const CONSTANT_BLOCK_INTERVAL = 50;
+const CONSTANT_BLOCK_INTERVAL = 200;
 
 const RPC_URL = process.env.RPC_URL;
 
@@ -198,7 +198,7 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
         }
 
         console.log(`${fnName()}[${pairConfig.token0}-${pairConfig.token1}]: pool address found: ${poolAddress} with pair ${pairConfig.token0}-${pairConfig.token1}`);
-        latestData = await fetchInitializeData(web3Provider, poolAddress, univ3PairContract);
+        latestData = await retry(fetchInitializeData, [web3Provider, poolAddress, univ3PairContract]);
         latestData.poolAddress = poolAddress;
     }
 
@@ -214,7 +214,7 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
     const filterSwap = univ3PairContract.filters.Swap();
     let iface = new ethers.utils.Interface(univ3Config.pancakeswapV3PairAbi);
 
-    const initBlockStep = 50000;
+    const initBlockStep = 10000;
     let blockStep = initBlockStep;
     let fromBlock =  latestData.blockNumber + 1;
     let toBlock = 0;
@@ -235,7 +235,7 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
             }, fromBlock, toBlock);
         }
         catch(e) {
-            // console.log(`query filter error: ${e.toString()}`);
+            console.log(`query filter error: ${e.toString()}`);
             blockStep = Math.round(blockStep / 2);
             if(blockStep < 1000) {
                 blockStep = 1000;
