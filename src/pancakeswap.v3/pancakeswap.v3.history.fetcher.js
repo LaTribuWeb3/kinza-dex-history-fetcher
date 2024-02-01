@@ -290,7 +290,7 @@ async function fetchInitializeData(web3Provider, poolAddress, univ3PairContract)
     // fetch the deployed block number for the pool
     const deployedBlock = await GetContractCreationBlockNumber(web3Provider, poolAddress);
     let fromBlock = deployedBlock;
-    let toBlock = deployedBlock + 100000;
+    let toBlock = deployedBlock + 10000;
     let latestData = undefined;
     while (!latestData) {
         console.log(`${fnName()}: searching Initialize event between blocks [${fromBlock} - ${toBlock}]`);
@@ -317,7 +317,7 @@ async function fetchInitializeData(web3Provider, poolAddress, univ3PairContract)
         } else {
             console.log(`${fnName()}: Initialize event not found between blocks [${fromBlock} - ${toBlock}]`);
             fromBlock = toBlock + 1;
-            toBlock = fromBlock + 100000;
+            toBlock = fromBlock + 10000;
         }
     }
     return latestData;
