@@ -68,8 +68,16 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
             console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${univ3Config.pairsToFetch.length} pairs in config`);
 
             const poolsData = [];
+            let poolPromises = [];
             for(const fetchConfig of poolsToFetch) {
-                const pairAddress = await FetchpancakeswapV3HistoryForPair(fetchConfig.pairToFetch, fetchConfig.fee, web3Provider, fetchConfig.poolAddress, currentBlock, minStartBlock);
+                const promise = FetchpancakeswapV3HistoryForPair(fetchConfig.pairToFetch, fetchConfig.fee, web3Provider, fetchConfig.poolAddress, currentBlock, minStartBlock);
+                poolPromises.push(promise);
+                await sleep(5000);
+            }
+
+            let cursor = 0;
+            for(const fetchConfig of poolsToFetch) {
+                const pairAddress = await poolPromises[cursor++];
                 if(pairAddress) {
                     poolsData.push({
                         tokens: [fetchConfig.pairToFetch.token0, fetchConfig.pairToFetch.token1],
@@ -235,7 +243,7 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
             }, fromBlock, toBlock);
         }
         catch(e) {
-            console.log(`query filter error: ${e.toString()}`);
+            // console.log(`query filter error: ${e.toString()}`);
             blockStep = Math.round(blockStep / 2);
             if(blockStep < 1000) {
                 blockStep = 1000;

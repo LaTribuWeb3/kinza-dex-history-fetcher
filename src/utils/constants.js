@@ -9,7 +9,7 @@ const DATA_DIR = process.cwd() + '/data';
 /**
  * List of platforms (dexes) that are available for data querying
  */
-const PLATFORMS = ['uniswapv2', 'curve', 'uniswapv3', 'sushiswapv2'];
+const PLATFORMS = ['pancakeswapv2'];
 
 /**
  * Base slippages we are searching for the risk oracle frontend
@@ -77,10 +77,10 @@ const MORPHO_RISK_PARAMETERS_ARRAY = [
 
 
 
-const DEFAULT_STEP_BLOCK = 100;
-const MEDIAN_OVER_BLOCK = 300; // amount of blocks to median the price over
+const DEFAULT_STEP_BLOCK = 200;
+const MEDIAN_OVER_BLOCK = 1200; // amount of blocks to median the price over
 
-const BLOCK_PER_DAY = 7128;
+const BLOCK_PER_DAY = 28800;
 
 const HALF_LIFE_1Y = Math.exp(Math.log(0.5) / (365)); // 0.9962091367899786 used when computing the rolling avg biggest daily change
 const HALF_LIFE_2Y = Math.exp(Math.log(0.5) / (730)); // 0.9981027686515946 used when computing the rolling avg biggest daily change

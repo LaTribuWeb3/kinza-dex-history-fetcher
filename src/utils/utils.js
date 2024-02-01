@@ -120,7 +120,7 @@ const getDay = (timestamp=undefined) => {
  * @param {number} maxRetries 
  * @returns 
  */
-async function retry(fn, params, retries = 0, maxRetries = 10) {
+async function retry(fn, params, retries = 0, maxRetries = 100) {
     try {
         const res = await fn(...params);
         if (retries) {

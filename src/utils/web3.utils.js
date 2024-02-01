@@ -6,6 +6,24 @@ dotenv.config();
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || 'YourApiKeyToken';
 
 let lastCallEtherscan = 0;
+
+
+
+async function getTxHashFromEtherscan(contractAddress){
+    const etherscanUrl = `https://api.bscscan.com/api?module=contract&action=getcontractcreation&contractaddresses=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
+    const etherscanResponse = await axios.get(etherscanUrl);
+  
+    if (etherscanResponse.data.message == 'NOTOK') {
+        throw new Error(`getTxHashFromEtherscan: Error: ${etherscanResponse.data.result}`);
+    } else if (etherscanResponse.data.result[0].txHash) {
+        return etherscanResponse.data.result[0].txHash;
+    } else {
+        console.error(etherscanResponse);
+        throw new Error('`getTxHashFromEtherscan: unknown error');
+    }
+}
+
+
 /**
  * Get the contract creation blocknumber using etherscan api
  * WILL ONLY WORK ON MAINNET
@@ -21,11 +39,10 @@ async function GetContractCreationBlockNumber(web3Provider, contractAddress) {
         await sleep(msToWait);
     }
     // call etherscan to get the tx receipt of contract creation
-    const etherscanUrl = `https://api.bscscan.com/api?module=contract&action=getcontractcreation&contractaddresses=${contractAddress}&apikey=${ETHERSCAN_API_KEY}`;
-    const etherscanResponse = await retry(axios.get, [etherscanUrl]);
+    const txHash = await retry(getTxHashFromEtherscan, [contractAddress]);
     lastCallEtherscan = Date.now();
 
-    const receipt = await retry(getTxHash, [web3Provider, etherscanResponse.data.result[0].txHash]);
+    const receipt = await retry(getTxHash, [web3Provider, txHash]);
     // console.log(receipt);
     console.log(`${fnName()}: returning blocknumber: ${receipt.blockNumber}`);
     return receipt.blockNumber;
@@ -39,6 +56,8 @@ async function getTxHash(web3Provider, txHash) {
 
     return receipt;
 }
+
+
 
 /**
  * Get block closest of timestamp, using defillama api

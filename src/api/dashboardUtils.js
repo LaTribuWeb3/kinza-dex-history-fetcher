@@ -7,6 +7,7 @@ function getFetcherResults() {
     const fetcherResults = [];
     for(const platform of PLATFORMS) {
         const filename = path.join(DATA_DIR, platform, `${platform}-fetcher-result.json`);
+        console.log(`getting ${filename}`);
         if(fs.existsSync(filename)) {
             fetcherResults.push(JSON.parse(fs.readFileSync(filename)));
         }
