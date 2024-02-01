@@ -52,7 +52,7 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
     }
 
     console.log(`${fnName()}: getting data since ${sinceBlock} to ${endBlock}`);
-    const univ2Data = getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, sinceBlock, endBlock);
+    const univ2Data = await getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, sinceBlock, endBlock);
     const fromConf = getConfTokenBySymbol(fromSymbol);
     const toConf = getConfTokenBySymbol(toSymbol);
 

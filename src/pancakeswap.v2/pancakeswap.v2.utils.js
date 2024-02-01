@@ -1,6 +1,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 /**
  * Compute price from normalized reserves
@@ -15,6 +16,38 @@ function computepancakeswapV2Price(normalizedFrom, normalizedTo) {
     return  normalizedTo / normalizedFrom;
 }
 
+async function loadFileLines(filePath) {
+    const lines = []; // Array to hold the lines
+
+    // Creating a readable stream
+    const readStream = fs.createReadStream(filePath);
+  
+    // Creating an instance of readline.Interface
+    const rl = readline.createInterface({
+        input: readStream,
+        crlfDelay: Infinity
+    });
+  
+    // Promise to handle the line-by-line reading
+    const lineReaderPromise = new Promise((resolve, reject) => {
+        rl.on('line', (line) => {
+            lines.push(line); // Pushing each line to the lines array
+        });
+  
+        rl.on('close', () => {
+            resolve(); // Resolve the promise when reading is complete
+        });
+  
+        readStream.on('error', (err) => {
+            reject(err); // Reject the promise on read error
+        });
+    });
+  
+    // Await for the lineReaderPromise to complete
+    await lineReaderPromise;
+    return lines; // Return the lines array
+
+}
 /**
  * Try to find the univ2 data file for fromSymbol/toSymbol
  * Return all the data we have since fromBlock to toBlock
@@ -23,15 +56,20 @@ function computepancakeswapV2Price(normalizedFrom, normalizedTo) {
  * @param {string} toSymbol 
  * @param {number} fromBlock 
  * @param {number} toBlock 
- * @returns {{[blocknumber: number]: {fromReserve: string, toReserve: string}}}
+ * @returns {Promise<{[blocknumber: number]: {fromReserve: string, toReserve: string}}>}
  */
-function getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, fromBlock, toBlock) {
+async function getUniV2DataforBlockInterval(DATA_DIR, fromSymbol, toSymbol, fromBlock, toBlock) {
     const fileInfo = getUniV2DataFile(DATA_DIR, fromSymbol, toSymbol);
     if(!fileInfo) {
         throw new Error(`Could not find pool data for ${fromSymbol}/${toSymbol} on pancakeswapv2`);
     }
     // load the file in RAM
-    const fileContent = fs.readFileSync(fileInfo.path, 'utf-8').split('\n');
+    let fileContent = [];
+    if(fs.lstatSync(fileInfo.path).size > 1 * 1024 * 1024 * 1024) {
+        fileContent = await loadFileLines(fileInfo.path);
+    } else {
+        fileContent = fs.readFileSync(fileInfo.path, 'utf-8').split('\n');
+    }
 
     const results = {};
     for(let i = 1; i < fileContent.length - 1; i++) {
