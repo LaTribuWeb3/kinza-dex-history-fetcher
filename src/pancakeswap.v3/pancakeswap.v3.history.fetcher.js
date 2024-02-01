@@ -253,12 +253,18 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
             // try to find the blockstep to reach 9000 events per call as the RPC limit is 10 000, 
             // this try to change the blockstep by increasing it when the pool is not very used
             // or decreasing it when the pool is very used
-            blockStep = Math.min(1_000_000, Math.round(blockStep * 8000 / events.length));
-            cptError = 0;
+            const newBlockStep = Math.min(1_000_000, Math.round(blockStep * 8000 / events.length));
+            if(newBlockStep > blockStep * 2) {
+                blockStep = blockStep * 2;
+            } else {
+                blockStep = newBlockStep;
+            }
         } else {
-            // if 0 events, multiply blockstep by 4
-            blockStep = blockStep * 4;
+            // if 0 events, multiply blockstep by 2
+            blockStep = blockStep * 2;
         }
+
+        cptError = 0;
         fromBlock = toBlock +1;
     }
 
