@@ -76,7 +76,6 @@ const MORPHO_RISK_PARAMETERS_ARRAY = [
 ];
 
 
-
 const DEFAULT_STEP_BLOCK = 200;
 const MEDIAN_OVER_BLOCK = 1200; // amount of blocks to median the price over
 

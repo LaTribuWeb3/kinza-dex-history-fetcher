@@ -3,7 +3,7 @@ const fs = require('fs');
 const { fnName, readLastLine } = require('../utils/utils');
 const { getAvailablepancakeswapV2, getUniV2DataforBlockInterval, computeLiquidityUniV2Pool, computepancakeswapV2Price } = require('./pancakeswap.v2.utils');
 const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
-const { DATA_DIR } = require('../utils/constants');
+const { DATA_DIR, DEFAULT_STEP_BLOCK } = require('../utils/constants');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { truncateUnifiedFiles } = require('../data.interface/unified.truncator');
 
@@ -63,7 +63,7 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
         const price = computepancakeswapV2Price(normalizedFrom, normalizedTo);
         
         // only save every 50 blocks
-        if(lastSavedBlock + 200 > blockNumber) {
+        if(lastSavedBlock + DEFAULT_STEP_BLOCK > blockNumber) {
             // just save the price
             // toWritePrice.push(`${blockNumber},${price}\n`);
             continue;

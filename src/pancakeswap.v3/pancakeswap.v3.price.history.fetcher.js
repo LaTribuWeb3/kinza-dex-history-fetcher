@@ -12,12 +12,13 @@ const { RecordMonitoring } = require('../utils/monitoring');
 const { DATA_DIR } = require('../utils/constants');
 const path = require('path');
 const { providers } = require('@0xsequence/multicall');
+const { getPriceFromSqrt } = require('./pancakeswap.v3.utils');
 
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
 
 const RPC_URL = process.env.RPC_URL;
 
-const pancakeswapV3_FEES = [100, 500, 3000, 10000];
+const pancakeswapV3_FEES = [100, 500, 2500, 10000];
 
 const runEverySec = 60 * 60;
 
@@ -72,28 +73,18 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
             const stalePairs = [];
             let promises = [];
             for(const groupedFetchConfig of Object.values(poolsToFetchGroupedByPair)) {
-                promises.push(FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock));
+                const promise = FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
+                // await promise;
+                promises.push(promise);
                 // const lastBlockWithData = await FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
-                if(promises.length >= 5) {
-                    const results = await Promise.all(promises);
-                    for(const result of results) {
-                        if(currentBlock - result.lastBlockWithData > 500_000) {
-                            stalePairs.push(`no data since ${currentBlock - result.lastBlockWithData} blocks for ${result.token0}/${result.token1}`);
-                        }
-                    }
 
-                    promises = [];
-                }
-
-                await sleep(1000);                
+                await sleep(5000);                
             }
 
-            if(promises.length > 0) {
-                const results = await Promise.all(promises);
-                for(const result of results) {
-                    if(currentBlock - result.lastBlockWithData > 500_000) {
-                        stalePairs.push(`no data since ${currentBlock - result.lastBlockWithData} blocks for ${result.token0}/${result.token1}`);
-                    }
+            const results = await Promise.all(promises);
+            for(const result of results) {
+                if(currentBlock - result.lastBlockWithData > 500_000) {
+                    stalePairs.push(`no data since ${currentBlock - result.lastBlockWithData} blocks for ${result.token0}/${result.token1}`);
                 }
             }
 
@@ -301,7 +292,7 @@ async function FetchpancakeswapV3PriceHistoryForPair(pairToFetch, pools, web3Pro
 }
 
 async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Conf) {
-    const initBlockStep = 100000;
+    const initBlockStep = 10000;
     let blockStep = initBlockStep;
     let fromBlock =  startBlock;
     let toBlock = 0;
@@ -331,12 +322,9 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
         // console.log(`${fnName()}[${fromBlock} - ${toBlock}]: found ${events.length} Swap events after ${cptError} errors (fetched ${toBlock-fromBlock+1} blocks)`);
         
         if(events.length != 0) {
+            const swapData = {};
             for(const e of events) {
-
-                // for the wstETH/WETH pool, ignore block 15952167 because of 1.28 price that is an outlier
-                if(e.blockNumber == 15952167 && token0Conf.symbol == 'wstETH' && token1Conf.symbol == 'WETH') {
-                    continue;
-                }
+                const price = getPriceFromSqrt(e.args.sqrtPriceX96, token0Conf.decimals, token1Conf.decimals);
 
                 const token0Amount = Math.abs(normalize(e.args.amount0, token0Conf.decimals));
                 if(token0Amount < token0Conf.dustAmount) {
@@ -347,20 +335,32 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
                     continue;
                 }
 
+                swapData[e.blockNumber] = price;
+                
+            }
+            
+            for(const [block, price] of Object.entries(swapData)) {
                 swapResults.push({
-                    block: e.blockNumber,
-                    price: token1Amount/token0Amount
+                    block: block,
+                    price: price, //token1Amount/token0Amount
                 });
             }
 
             // try to find the blockstep to reach 9000 events per call as the RPC limit is 10 000, 
             // this try to change the blockstep by increasing it when the pool is not very used
             // or decreasing it when the pool is very used
-            blockStep = Math.min(1_000_000, Math.round(blockStep * 8000 / events.length));
+            const newBlockStep = Math.min(1_000_000, Math.round(blockStep * 8000 / events.length));
+
+            if(newBlockStep > blockStep * 2) {
+                blockStep = blockStep * 2;
+            } else {
+                blockStep = newBlockStep;
+            }
+
             cptError = 0;
         } else {
             // if 0 events, multiply blockstep by 4
-            blockStep = blockStep * 4;
+            blockStep = blockStep * 2;
         }
         fromBlock = toBlock +1;
     }
@@ -368,5 +368,5 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
     return swapResults;
 }
 
-// pancakeswapV3PriceHistoryFetcher(true);
+pancakeswapV3PriceHistoryFetcher(true);
 module.exports = { pancakeswapV3PriceHistoryFetcher };

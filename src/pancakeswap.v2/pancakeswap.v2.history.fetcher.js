@@ -9,11 +9,11 @@ const { GetContractCreationBlockNumber, getBlocknumberForTimestamp } = require('
 const { sleep, fnName, roundTo, readLastLine, retry } = require('../utils/utils');
 const { RecordMonitoring } = require('../utils/monitoring');
 const { generateUnifiedFileUniv2 } = require('./pancakeswap.v2.unified.generator');
-const { DATA_DIR } = require('../utils/constants');
+const { DATA_DIR, DEFAULT_STEP_BLOCK } = require('../utils/constants');
 const path = require('path');
 
 const RPC_URL = process.env.RPC_URL;
-const MINIMUM_TO_APPEND = process.env.MINIMUM_TO_APPEND || 5000;
+const MINIMUM_TO_APPEND = process.env.MINIMUM_TO_APPEND || 100;
 
 const runEverySec = 60 * 60;
 
@@ -43,11 +43,13 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
             console.log(`${fnName()}: starting`);
             const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
             const currentBlock = await web3Provider.getBlockNumber() - 10;
+            const minStartDate = Math.round(Date.now()/1000) - 365 * 2 * 24 * 60 * 60; // min start block is 2y ago
+            const minStartBlock = await getBlocknumberForTimestamp(minStartDate);
             const stalePools = [];
             const poolsData = [];
             for(const pairKey of univ2Config.pancakeswapV2Pairs) {
                 console.log(`${fnName()}: Start fetching pair ` + pairKey);
-                const fetchResult = await FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, 0);
+                const fetchResult = await FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
                 console.log(`${fnName()}: End fetching pair ` + pairKey);
                 if(fetchResult.isStale) {
                     stalePools.push(pairKey);
@@ -142,7 +144,7 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
         throw new Error('Order mismatch between configuration and pancakeswapv2 pair');
     }
 
-    const initBlockStep = 500000;
+    const initBlockStep = 10000;
 
     let startBlock = undefined;
     if (!fs.existsSync(DATA_DIR)){
@@ -173,6 +175,10 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     let toBlock = 0;
     let cptError = 0;
     let lastEventBlock = startBlock;
+    let lastBlockSaved = 0;
+
+    const maxStep = Number(process.env.STEP_MAX) || Number.MAX_SAFE_INTEGER;
+
     while(toBlock < currentBlock) {
 
         toBlock = fromBlock + blockStep - 1;
@@ -198,72 +204,57 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
 
         console.log(`${fnName()}[${pairKey}]: [${fromBlock} - ${toBlock}] found ${events.length} Sync events after ${cptError} errors (fetched ${toBlock-fromBlock+1} blocks)`);
         cptError = 0;
+
+        const values = {};
         
         if(events.length > 0) {
-            if(events.length == 1) {
-                lastEventBlock = events[0].blockNumber;
-                liquidityValues.push({
-                    blockNumber: events[0].blockNumber,
-                    reserve0: events[0].args.reserve0.toString(),
-                    reserve1: events[0].args.reserve1.toString()
-                });
-            }
-            else {
-                let previousEvent = events[0];
-                // for each events, we will only save the last event of a block
-                for(let i = 1; i < events.length; i++) {
-                    const workingEvent = events[i];
-                    lastEventBlock = events[i].blockNumber;
-                    
-                    // we save the 'previousEvent' when the workingEvent block number is different than the previousEvent
-                    if(workingEvent.blockNumber != previousEvent.blockNumber) {
-                        liquidityValues.push({
-                            blockNumber: previousEvent.blockNumber,
-                            reserve0: previousEvent.args.reserve0.toString(),
-                            reserve1: previousEvent.args.reserve1.toString()
-                        });
-                    }
-                    
-                    if(i == events.length -1) {
-                        // always save the last event
-                        liquidityValues.push({
-                            blockNumber: workingEvent.blockNumber,
-                            reserve0: workingEvent.args.reserve0.toString(),
-                            reserve1: workingEvent.args.reserve1.toString()
-                        });
-                    }
-        
-                    previousEvent = workingEvent;
+            for(const event of events) {
+                if(event.blockNumber > lastBlockSaved + DEFAULT_STEP_BLOCK) {
+                    lastBlockSaved = event.blockNumber;
+                    values[event.blockNumber] = {
+                        r0: events[0].args.reserve0.toString(),
+                        r1: events[0].args.reserve1.toString()
+                    };
                 }
+            }            
+            
+            for(const [block, data] of Object.entries(values)) {
+                liquidityValues.push({
+                    block: block,
+                    r0: data.r0,
+                    r1: data.r1,
+                });
             }
     
             if(liquidityValues.length >= MINIMUM_TO_APPEND) {
-                const textToAppend = liquidityValues.map(_ => `${_.blockNumber},${_.reserve0},${_.reserve1}`);
+                const textToAppend = liquidityValues.map(_ => `${_.block},${_.r0},${_.r1}`);
                 fs.appendFileSync(historyFileName, textToAppend.join('\n') + '\n');
                 liquidityValues = [];
             }
             // try to find the blockstep to reach 8000 events per call as the RPC limit is 10 000, 
             // this try to change the blockstep by increasing it when the pool is not very used
             // or decreasing it when the pool is very used
-            const newBlockStep = Math.min(1000000, Math.round(blockStep * 8000 / events.length));
-            if(newBlockStep > blockStep*2){
-                blockStep = blockStep*2;
-            }
-            else{
-                blockStep = newBlockStep;
-            }
+            // const newBlockStep = Math.min(1000000, Math.round(blockStep * 8000 / events.length));
+            // if(newBlockStep > blockStep*2){
+            //     blockStep = blockStep*2;
+            // }
+            // else{
+            //     blockStep = newBlockStep;
+            // }
+
+            blockStep = Math.min(maxStep, blockStep*2);
         }
 
         fromBlock = toBlock +1;
     }
     
     if(liquidityValues.length > 0) {
-        const textToAppend = liquidityValues.map(_ => `${_.blockNumber},${_.reserve0},${_.reserve1}`);
+        const textToAppend = liquidityValues.map(_ => `${_.block},${_.r0},${_.r1}`);
         fs.appendFileSync(historyFileName, textToAppend.join('\n') + '\n');
     }
 
     // return true if the last event fetched is more than 500k blocks old
-    return {isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress}
+    return {isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};
 }
 
 pancakeswapV2HistoryFetcher();
