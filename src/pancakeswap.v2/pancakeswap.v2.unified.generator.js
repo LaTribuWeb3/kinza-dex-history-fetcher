@@ -77,6 +77,14 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol) {
         lastSavedBlock = Number(blockNumber);
         toWrite.push(`${blockNumber},${price},${JSON.stringify(slippageMap)}\n`);
         toWritePrice.push(`${blockNumber},${price}\n`);
+
+        if(toWrite.length >= 5000) {
+            fs.appendFileSync(unifiedFullFilename, toWrite.join(''));
+            fs.appendFileSync(unifiedFullFilenamePrice, toWritePrice.join(''));
+
+            toWrite = [];
+            toWritePrice = [];
+        }
     }
 
     if(toWrite.length == 0) {
