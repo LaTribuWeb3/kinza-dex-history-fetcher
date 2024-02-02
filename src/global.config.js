@@ -302,4 +302,18 @@ const watchedPairs = {
     ],
 };
 
-module.exports = { tokens, watchedPairs };
+
+const pairsToFetch = [
+    'WBNB',
+    'USDT',
+    'ETH',
+    'BTCB',
+    'USDC',
+    'FDUSD',
+    'SnBNB',
+    'wBETH',
+    'HAY',
+    'TUSD',
+];
+
+module.exports = { tokens, watchedPairs, pairsToFetch };

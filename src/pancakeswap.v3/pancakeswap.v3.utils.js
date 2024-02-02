@@ -4,9 +4,79 @@ const { fnName } = require('../utils/utils');
 const fs = require('fs');
 const path = require('path');
 const { getDefaultSlippageMap } = require('../data.interface/internal/data.interface.utils');
+const { getConfTokenBySymbol } = require('../utils/token.utils');
+const { pairsToFetch } = require('../global.config');
+const { Contract, ethers } = require('ethers');
+
+const univ3Config = require('./pancakeswap.v3.config');
 
 const CONSTANT_1e18 = new BigNumber(10).pow(18);
 const CONSTANT_TARGET_SLIPPAGE = 20;
+
+
+
+const pancakeswapV3_FEES = [100, 500, 2500, 10000];
+
+async function getAllPoolsToFetch(univ3Factory, web3Provider) {
+    const poolsToFetch = [];
+    // find existing pools via multicall
+    const promises = [];
+    for (const token0Symbol of pairsToFetch) {
+        for (const token1Symbol of pairsToFetch) {
+            if(token0Symbol == token1Symbol) {
+                continue;
+            }
+
+            for (const fee of pancakeswapV3_FEES) {
+                const token0 = getConfTokenBySymbol(token0Symbol);
+                if (!token0) {
+                    throw new Error('Cannot find token in global config with symbol: ' + token0Symbol);
+                }
+                const token1 = getConfTokenBySymbol(token1Symbol);
+                if (!token1) {
+                    throw new Error('Cannot find token in global config with symbol: ' + token1Symbol);
+                }
+
+                promises.push(univ3Factory.getPool(token0.address, token1.address, fee));
+            }
+        }
+    }
+
+    await Promise.all(promises);
+    let promiseIndex = 0;
+    for (const token0 of pairsToFetch) {
+        for (const token1 of pairsToFetch) {
+            if(token0 == token1) {
+                continue;
+            }
+            for (const fee of pancakeswapV3_FEES) {
+                const poolAddress = await promises[promiseIndex];
+                if (poolAddress == ethers.constants.AddressZero) {
+                    console.log(`${fnName()}[${token0}-${token1}-${fee}]: pool does not exist`);
+                } else {
+                    const univ3PairContract = new Contract(poolAddress, univ3Config.pancakeswapV3PairAbi, web3Provider);
+                    const poolToken0 = await univ3PairContract.token0();
+                    const token0Conf = getConfTokenBySymbol(token0);
+                    if(poolToken0.toLowerCase() != token0Conf.address.toLowerCase()) {
+                        // ignore
+                    } else {
+                        poolsToFetch.push({
+                            pairToFetch: {
+                                token0,
+                                token1},
+                            fee,
+                            poolAddress
+                        });
+                    }
+
+                }
+
+                promiseIndex++;
+            }
+        }
+    }
+    return poolsToFetch;
+}
 
 /**
  * Calculate the price of token0 vs token1.
@@ -451,4 +521,4 @@ function getUniV3DataContents(selectedFiles, dataDir, minBlock=0) {
     return dataContents;
 }
 
-module.exports = { getPriceNormalized, getSlippages, getAvailablepancakeswapV3, getUniV3DataforBlockInterval, getPriceFromSqrt };
+module.exports = { getPriceNormalized, getSlippages, getAvailablepancakeswapV3, getUniV3DataforBlockInterval, getPriceFromSqrt, getAllPoolsToFetch };

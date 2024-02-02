@@ -12,13 +12,12 @@ const { RecordMonitoring } = require('../utils/monitoring');
 const { DATA_DIR } = require('../utils/constants');
 const path = require('path');
 const { providers } = require('@0xsequence/multicall');
-const { getPriceFromSqrt } = require('./pancakeswap.v3.utils');
+const { getPriceFromSqrt, getAllPoolsToFetch } = require('./pancakeswap.v3.utils');
+const { pairsToFetch } = require('../global.config');
 
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
 
 const RPC_URL = process.env.RPC_URL;
-
-const pancakeswapV3_FEES = [100, 500, 2500, 10000];
 
 const runEverySec = 60 * 60;
 
@@ -55,8 +54,8 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
             const currentBlock = await web3Provider.getBlockNumber() - 10;
 
             console.log(`${fnName()}: getting pools to fetch`);
-            const poolsToFetch = await getAllPoolsToFetch(univ3Factory);
-            console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${univ3Config.pairsToFetch.length} pairs in config`);
+            const poolsToFetch = await getAllPoolsToFetch(univ3Factory, web3Provider);
+            console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${pairsToFetch.length} pairs in config`);
 
             const poolsToFetchGroupedByPair = {};
             for(const fetchConfig of poolsToFetch) {
@@ -120,46 +119,6 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
             await sleep(sleepTime);
         }
     }
-}
-
-async function getAllPoolsToFetch(univ3Factory) {
-    const poolsToFetch = [];
-    // find existing pools via multicall
-    const promises = [];
-    for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of pancakeswapV3_FEES) {
-            const token0 = getConfTokenBySymbol(pairToFetch.token0);
-            if (!token0) {
-                throw new Error('Cannot find token in global config with symbol: ' + pairToFetch.token0);
-            }
-            const token1 = getConfTokenBySymbol(pairToFetch.token1);
-            if (!token1) {
-                throw new Error('Cannot find token in global config with symbol: ' + pairToFetch.token1);
-            }
-
-            promises.push(univ3Factory.getPool(token0.address, token1.address, fee));
-        }
-    }
-
-    await Promise.all(promises);
-    let promiseIndex = 0;
-    for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of pancakeswapV3_FEES) {
-            const poolAddress = await promises[promiseIndex];
-            if (poolAddress == ethers.constants.AddressZero) {
-                console.log(`${fnName()}[${pairToFetch.token0}-${pairToFetch.token1}-${fee}]: pool does not exist`);
-            } else {
-                poolsToFetch.push({
-                    pairToFetch,
-                    fee,
-                    poolAddress
-                });
-            }
-
-            promiseIndex++;
-        }
-    }
-    return poolsToFetch;
 }
 
 async function FetchpancakeswapV3PriceHistoryForPair(pairToFetch, pools, web3Provider, currentBlock) {
@@ -368,5 +327,5 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
     return swapResults;
 }
 
-// pancakeswapV3PriceHistoryFetcher();
+pancakeswapV3PriceHistoryFetcher();
 module.exports = { pancakeswapV3PriceHistoryFetcher };

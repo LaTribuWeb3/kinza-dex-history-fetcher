@@ -8,21 +8,20 @@ const univ3Config = require('./pancakeswap.v3.config');
 const { GetContractCreationBlockNumber, getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { fnName, logFnDuration, sleep, roundTo, retry } = require('../utils/utils');
 const { getConfTokenBySymbol } = require('../utils/token.utils');
-const { getPriceNormalized, getSlippages } = require('./pancakeswap.v3.utils');
+const { getPriceNormalized, getSlippages, getAllPoolsToFetch } = require('./pancakeswap.v3.utils');
 const { default: BigNumber } = require('bignumber.js');
 const { RecordMonitoring } = require('../utils/monitoring');
 const { generateUnifiedFileUniv3 } = require('./pancakeswap.v3.unified.generator');
 const { DATA_DIR } = require('../utils/constants');
 const path = require('path');
 const { providers } = require('@0xsequence/multicall');
+const { pairsToFetch } = require('../global.config');
 
 const CONSTANT_1e18 = new BigNumber(10).pow(18);
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
 const CONSTANT_BLOCK_INTERVAL = 200;
 
 const RPC_URL = process.env.RPC_URL;
-
-const pancakeswapV3_FEES = [100, 500, 2500, 10000];
 
 const runEverySec = 60 * 60;
 
@@ -65,7 +64,7 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
 
             console.log(`${fnName()}: getting pools to fetch`);
             const poolsToFetch = await getAllPoolsToFetch(univ3Factory, web3Provider);
-            console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${univ3Config.pairsToFetch.length} pairs in config`);
+            console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${pairsToFetch.length} pairs in config`);
 
             const poolsData = [];
             let poolPromises = [];
@@ -126,67 +125,6 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
             await sleep(sleepTime);
         }
     }
-}
-
-async function getAllPoolsToFetch(univ3Factory, web3Provider) {
-    const poolsToFetch = [];
-    // find existing pools via multicall
-    const promises = [];
-    for (const token0Symbol of univ3Config.pairsToFetch) {
-        for (const token1Symbol of univ3Config.pairsToFetch) {
-            if(token0Symbol == token1Symbol) {
-                continue;
-            }
-
-            for (const fee of pancakeswapV3_FEES) {
-                const token0 = getConfTokenBySymbol(token0Symbol);
-                if (!token0) {
-                    throw new Error('Cannot find token in global config with symbol: ' + token0Symbol);
-                }
-                const token1 = getConfTokenBySymbol(token1Symbol);
-                if (!token1) {
-                    throw new Error('Cannot find token in global config with symbol: ' + token1Symbol);
-                }
-
-                promises.push(univ3Factory.getPool(token0.address, token1.address, fee));
-            }
-        }
-    }
-
-    await Promise.all(promises);
-    let promiseIndex = 0;
-    for (const token0 of univ3Config.pairsToFetch) {
-        for (const token1 of univ3Config.pairsToFetch) {
-            if(token0 == token1) {
-                continue;
-            }
-            for (const fee of pancakeswapV3_FEES) {
-                const poolAddress = await promises[promiseIndex];
-                if (poolAddress == ethers.constants.AddressZero) {
-                    console.log(`${fnName()}[${token0}-${token1}-${fee}]: pool does not exist`);
-                } else {
-                    const univ3PairContract = new Contract(poolAddress, univ3Config.pancakeswapV3PairAbi, web3Provider);
-                    const poolToken0 = await univ3PairContract.token0();
-                    const token0Conf = getConfTokenBySymbol(token0);
-                    if(poolToken0.toLowerCase() != token0Conf.address.toLowerCase()) {
-                        // ignore
-                    } else {
-                        poolsToFetch.push({
-                            pairToFetch: {
-                                token0,
-                                token1},
-                            fee,
-                            poolAddress
-                        });
-                    }
-
-                }
-
-                promiseIndex++;
-            }
-        }
-    }
-    return poolsToFetch;
 }
 
 async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, poolAddress, currentBlock, minStartBlock) {
@@ -430,6 +368,6 @@ function getSaveData(token0, token1, latestData) {
     return `${latestData.blockNumber},${JSON.stringify(saveValue)}\n`;
 }
 
-pancakeswapV3HistoryFetcher();
+// pancakeswapV3HistoryFetcher();
 
 module.exports = { pancakeswapV3HistoryFetcher };

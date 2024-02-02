@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const univ2Config = require('./pancakeswap.v2.config');
-const { tokens } = require('../global.config');
+const { tokens, pairsToFetch } = require('../global.config');
 const { GetContractCreationBlockNumber, getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { sleep, fnName, roundTo, readLastLine, retry } = require('../utils/utils');
 const { RecordMonitoring } = require('../utils/monitoring');
@@ -47,23 +47,42 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
             const minStartBlock = await getBlocknumberForTimestamp(minStartDate);
             const stalePools = [];
             const poolsData = [];
-            for(const pairKey of univ2Config.pancakeswapV2Pairs) {
-                console.log(`${fnName()}: Start fetching pair ` + pairKey);
-                const fetchResult = await FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
-                console.log(`${fnName()}: End fetching pair ` + pairKey);
+            const promises = [];
+            for(const token0 of pairsToFetch) {
+                for(const token1 of pairsToFetch) {
+                    if(token0 == token1) {
+                        continue;
+                    }
+                    const pairKey = `${token0}-${token1}`;
+                    console.log(`${fnName()}: Start fetching pair ` + pairKey);
+                    const promise = FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
+                    promises.push(promise);
+                    await sleep(10000);
+                }
+            }
+
+            await Promise.all(promises);
+
+            for(const promise of promises) {
+                const fetchResult = await promise;
+                // mean the pair does not exists on chain
+                if(!fetchResult) {
+                    continue;
+                }
                 if(fetchResult.isStale) {
-                    stalePools.push(pairKey);
+                    stalePools.push(fetchResult.pairKey);
                 }
 
                 
-                const token0Symbol = pairKey.split('-')[0];
-                const token1Symbol = pairKey.split('-')[1];
+                const token0Symbol = fetchResult.pairKey.split('-')[0];
+                const token1Symbol = fetchResult.pairKey.split('-')[1];
                 poolsData.push({
                     tokens: [token0Symbol, token1Symbol],
                     address: fetchResult.pairAddress,
                     label: ''
                 });
             }
+                    
 
             if(stalePools.length > 0) {
                 console.warn(`Stale pools: ${stalePools.join(',')}`);
@@ -131,17 +150,17 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     const pairAddress = await retry(factoryContract.getPair, [token0Address, token1Address]);
 
     if(pairAddress == ethers.constants.AddressZero) {
-        throw new Error(`Could not find address with tokens  ${token0Symbol} and ${token1Symbol}`);
+        return undefined;
     }
 
     const pairContract = new ethers.Contract(pairAddress, univ2Config.pancakeswapV2PairABI, web3Provider);
     const contractToken0 = await retry(pairContract.token0, []);
     if(contractToken0.toLowerCase() != token0Address.toLowerCase()) {
-        throw new Error('Order mismatch between configuration and pancakeswapv2 pair');
+        return undefined;
     }
     const contractToken1 = await retry(pairContract.token1, []);
     if(contractToken1.toLowerCase() != token1Address.toLowerCase()) {
-        throw new Error('Order mismatch between configuration and pancakeswapv2 pair');
+        return undefined;
     }
 
     const initBlockStep = 10000;
@@ -242,8 +261,10 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
             //     blockStep = newBlockStep;
             // }
 
-            blockStep = Math.min(maxStep, blockStep*2);
+            // blockStep = Math.min(maxStep, blockStep*2);
         }
+
+        blockStep = Math.min(maxStep, blockStep*2);
 
         fromBlock = toBlock +1;
     }
@@ -254,9 +275,9 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     }
 
     // return true if the last event fetched is more than 500k blocks old
-    return {isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};
+    return {pairKey: pairKey, isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};
 }
 
-// pancakeswapV2HistoryFetcher();
+pancakeswapV2HistoryFetcher();
 
 module.exports = { pancakeswapV2HistoryFetcher };
