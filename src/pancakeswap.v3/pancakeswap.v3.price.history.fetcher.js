@@ -138,6 +138,10 @@ function ignorePool(token0, token1) {
         case 'FDUSD-TUSD':
         case 'wBETH-USDT':
         case 'USDT-wBETH':
+        case 'BTCB-wBETH':
+        case 'wBETH-BTCB':
+        case 'WBNB-wBETH':
+        case 'wBETH-WBNB':
             return true;
     }
 }
