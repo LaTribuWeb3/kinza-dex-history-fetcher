@@ -65,7 +65,7 @@ const watchedPairs = {
         },
         {
             quote: 'USDC',
-            pivots: ['USDT'],
+            pivots: undefined,
             exportToInternalDashboard: true
         },
         {
@@ -186,17 +186,17 @@ const watchedPairs = {
     'ETH': [
         {
             quote: 'USDT',
-            pivots: ['USDC'],
+            pivots: undefined,
             exportToInternalDashboard: true
         },
         {
             quote: 'TUSD',
-            pivots: ['WBNB'],
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'FDUSD',
-            pivots: ['WBNB'],
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
@@ -228,12 +228,12 @@ const watchedPairs = {
         },
         {
             quote: 'wBETH',
-            pivots: ['WBNB', 'ETH'],
+            pivots: ['ETH'],
             exportToInternalDashboard: true
         },
         {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
         {
@@ -250,7 +250,7 @@ const watchedPairs = {
         },
         {
             quote: 'wBETH',
-            pivots: ['USDT', 'WBNB', 'ETH'],
+            pivots: ['USDT', 'ETH'],
             exportToInternalDashboard: true
         },
         {
@@ -267,7 +267,7 @@ const watchedPairs = {
     'FDUSD': [
         {
             quote: 'wBETH',
-            pivots: ['USDT', 'WBNB', 'ETH'],
+            pivots: ['USDT', 'ETH'],
             exportToInternalDashboard: true
         },
         {
