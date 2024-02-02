@@ -54,11 +54,16 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
                     if(token0 == token1) {
                         continue;
                     }
+
+                    if(ignorePool(token0, token1)) {     
+                        console.log(`${fnName()}: Ignoring pool for ${token0}-${token1}`);
+                        continue;
+                    }
                     const pairKey = `${token0}-${token1}`;
                     console.log(`${fnName()}: Start fetching pair ` + pairKey);
                     const promise = FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
                     promises.push(promise);
-                    await sleep(10000);
+                    await sleep(500);
                 }
             }
 
@@ -133,6 +138,26 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
     }
 }
 
+// ignore a number of pool because they are empty and are taking a lot of time to fetch FOR NOTHING
+function ignorePool(token0, token1) {
+    switch(`${token0}-${token1}`) {
+        default:
+            return false;
+        case 'HAY-BTCB':
+        case 'wBETH-WBNB':
+        case 'BTCB-FDUSD':
+        case 'WBNB-FDUSD':
+        case 'SnBNB-WBNB':
+        case 'USDT-FDUSD':
+        case 'HAY-USDC':
+        case 'TUSD-WBNB':
+        case 'ETH-wBETH':
+        case 'TUSD-USDT':
+        case 'HAY-USDT':
+            return true;
+    }
+}
+
 /**
  * Fetches all history for a pancakeswap v2 pair (a pool)
  * Store the results into a csv file, and use the file as start for a run
@@ -151,16 +176,19 @@ async function FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, historyFi
     const pairAddress = await retry(factoryContract.getPair, [token0Address, token1Address]);
 
     if(pairAddress == ethers.constants.AddressZero) {
+        console.log(`${fnName()}[${pairKey}]: pair does not exist`);
         return undefined;
     }
 
     const pairContract = new ethers.Contract(pairAddress, univ2Config.pancakeswapV2PairABI, web3Provider);
     const contractToken0 = await retry(pairContract.token0, []);
     if(contractToken0.toLowerCase() != token0Address.toLowerCase()) {
+        console.log(`${fnName()}[${pairKey}]: pair does not exist`);
         return undefined;
     }
     const contractToken1 = await retry(pairContract.token1, []);
     if(contractToken1.toLowerCase() != token1Address.toLowerCase()) {
+        console.log(`${fnName()}[${pairKey}]: pair does not exist`);
         return undefined;
     }
 
@@ -279,6 +307,6 @@ async function FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, historyFi
     return {pairKey: pairKey, isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};
 }
 
-pancakeswapV2HistoryFetcher();
+// pancakeswapV2HistoryFetcher();
 
 module.exports = { pancakeswapV2HistoryFetcher };

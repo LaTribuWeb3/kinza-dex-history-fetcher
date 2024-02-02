@@ -72,7 +72,7 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
             for(const fetchConfig of poolsToFetch) {
                 const promise = FetchpancakeswapV3HistoryForPair(fetchConfig.pairToFetch, fetchConfig.fee, web3Provider, fetchConfig.poolAddress, currentBlock, minStartBlock);
                 poolPromises.push(promise);
-                await sleep(5000);
+                await sleep(500);
             }
 
             let cursor = 0;
@@ -372,6 +372,6 @@ function getSaveData(token0, token1, latestData) {
     return `${latestData.blockNumber},${JSON.stringify(saveValue)}\n`;
 }
 
-pancakeswapV3HistoryFetcher();
+// pancakeswapV3HistoryFetcher();
 
 module.exports = { pancakeswapV3HistoryFetcher };

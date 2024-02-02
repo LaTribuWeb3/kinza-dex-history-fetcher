@@ -73,12 +73,16 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
             const stalePairs = [];
             let promises = [];
             for(const groupedFetchConfig of Object.values(poolsToFetchGroupedByPair)) {
+                if(ignorePool(groupedFetchConfig.pairToFetch.token0, groupedFetchConfig.pairToFetch.token1)) {
+                    console.log(`Ignoring pair ${groupedFetchConfig.pairToFetch.token0}-${groupedFetchConfig.pairToFetch.token1}`);
+                    continue;
+                }
                 const promise = FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
                 // await promise;
                 promises.push(promise);
                 // const lastBlockWithData = await FetchpancakeswapV3PriceHistoryForPair(groupedFetchConfig.pairToFetch, groupedFetchConfig.pools, web3Provider, currentBlock);
 
-                await sleep(5000);                
+                await sleep(500);                
             }
 
             const results = await Promise.all(promises);
@@ -119,6 +123,22 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
             console.log(`${fnName()}: sleeping ${roundTo(sleepTime/1000/60)} minutes`);
             await sleep(sleepTime);
         }
+    }
+}
+
+function ignorePool(token0, token1) {
+    switch(`${token0}-${token1}`) {
+        default:
+            return false;
+        case 'wBETH-USDC':
+        case 'wBETH-FDUSD':
+        case 'USDC-wBETH':
+        case 'TUSD-FDUSD':
+        case 'FDUSD-wBETH':
+        case 'FDUSD-TUSD':
+        case 'wBETH-USDT':
+        case 'USDT-wBETH':
+            return true;
     }
 }
 
@@ -332,5 +352,5 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
     return swapResults;
 }
 
-pancakeswapV3PriceHistoryFetcher();
+// pancakeswapV3PriceHistoryFetcher();
 module.exports = { pancakeswapV3PriceHistoryFetcher };
