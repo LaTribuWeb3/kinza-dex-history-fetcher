@@ -73,7 +73,7 @@ async function PrecomputeDashboardData() {
             const blockTimeStamps = {};
             console.log(`${fnName()}: getting all block timestamps`);
             for(const blockNumber of displayBlocks) {
-                blockTimeStamps[blockNumber] = await retry(() => (web3Provider.getBlock(blockNumber)).timestamp, []);
+                blockTimeStamps[blockNumber] = await retry(async () => (await web3Provider.getBlock(blockNumber)).timestamp, []);
             }
 
             // AVG step is the amount of blocks to be used when computing average liquidity

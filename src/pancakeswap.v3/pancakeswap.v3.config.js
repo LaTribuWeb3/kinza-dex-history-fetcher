@@ -7,67 +7,79 @@ const pancakeswapV3PairAbi = [{"inputs":[],"stateMutability":"nonpayable","type"
 const pancakeswapFactoryV3Address = "0x0BFbCF9fa4f9C56B0F40a671Ad40E0805A091865"
 
 const pairsToFetch = [
-  {
-    "token0": "USDT",
-    "token1": "WBNB"
-  },
-  {
-    "token0": "ETH",
-    "token1": "BTCB"
-  },
-  {
-    "token0": "USDT",
-    "token1": "USDC"
-  },
-  {
-    "token0": "BTCB",
-    "token1": "WBNB"
-  },
-  {
-    "token0": "USDT",
-    "token1": "BTCB"
-  },
-  {
-    "token0": "ETH",
-    "token1": "WBNB"
-  },
-  {
-    "token0": "USDT",
-    "token1": "FDUSD"
-  },
-  {
-    "token0": "ETH",
-    "token1": "USDC"
-  },
-  {
-    "token0": "SnBNB",
-    "token1": "WBNB"
-  },
-  {
-    "token0": "ETH",
-    "token1": "wBETH"
-  },
-  {
-    "token0": "TUSD",
-    "token1": "USDT"
-  },
-  {
-    "token0": "HAY",
-    "token1": "WBNB"
-  },
-  {
-    "token0": "HAY",
-    "token1": "ETH"
-  },
-  {
-    "token0": "HAY",
-    "token1": "USDT"
-  },
-  {
-    "token0": "BTCB",
-    "token1": "FDUSD"
-  }
+  "WBNB",
+  "USDT",
+  "ETH",
+  "BTCB",
+  "USDC",
+  "FDUSD",
+  "SnBNB",
+  "wBETH",
+  "HAY",
+  "TUSD",
 ]
+// const pairsToFetch = [
+//   {
+//     "token0": "USDT",
+//     "token1": "WBNB"
+//   },
+//   {
+//     "token0": "ETH",
+//     "token1": "BTCB"
+//   },
+//   {
+//     "token0": "USDT",
+//     "token1": "USDC"
+//   },
+//   {
+//     "token0": "BTCB",
+//     "token1": "WBNB"
+//   },
+//   {
+//     "token0": "USDT",
+//     "token1": "BTCB"
+//   },
+//   {
+//     "token0": "ETH",
+//     "token1": "WBNB"
+//   },
+//   {
+//     "token0": "USDT",
+//     "token1": "FDUSD"
+//   },
+//   {
+//     "token0": "ETH",
+//     "token1": "USDC"
+//   },
+//   {
+//     "token0": "SnBNB",
+//     "token1": "WBNB"
+//   },
+//   {
+//     "token0": "ETH",
+//     "token1": "wBETH"
+//   },
+//   {
+//     "token0": "TUSD",
+//     "token1": "USDT"
+//   },
+//   {
+//     "token0": "HAY",
+//     "token1": "WBNB"
+//   },
+//   {
+//     "token0": "HAY",
+//     "token1": "ETH"
+//   },
+//   {
+//     "token0": "HAY",
+//     "token1": "USDT"
+//   },
+//   {
+//     "token0": "BTCB",
+//     "token1": "FDUSD"
+//   }
+// ]
 
 module.exports = {
     pancakeswapV3PairAbi, pancakeswapFactoryV3Abi, pancakeswapFactoryV3Address, pairsToFetch

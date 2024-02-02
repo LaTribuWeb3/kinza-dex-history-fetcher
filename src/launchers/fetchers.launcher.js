@@ -11,9 +11,9 @@ const { pancakeswapV3PriceHistoryFetcher } = require('../pancakeswap.v3/pancakes
 const RUN_EVERY_MINUTES = 60;
 
 const fetchersToStart = [
-    pancakeswapV2HistoryFetcher,
-    pancakeswapV3HistoryFetcher,
-    pancakeswapV3PriceHistoryFetcher,
+    // pancakeswapV2HistoryFetcher,
+    // pancakeswapV3HistoryFetcher,
+    // pancakeswapV3PriceHistoryFetcher,
     PrecomputeMedianPrices,
 ];
 

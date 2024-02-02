@@ -57,53 +57,6 @@ const tokens = {
 };
 // goes both ways
 const watchedPairs = {
-    'BTCB': [
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'TUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'FDUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'wBETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'HAY',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'SnBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-    ],
     'WBNB': [
         {
             quote: 'BTCB',
@@ -112,7 +65,7 @@ const watchedPairs = {
         },
         {
             quote: 'USDC',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
@@ -127,17 +80,17 @@ const watchedPairs = {
         },
         {
             quote: 'TUSD',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'FDUSD',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'wBETH',
-            pivots: undefined,
+            pivots: ['ETH'],
             exportToInternalDashboard: true
         },
         {
@@ -148,21 +101,53 @@ const watchedPairs = {
         {
             quote: 'SnBNB',
             pivots: undefined,
+            exportToInternalDashboard: true
+        },
+    ],
+    'BTCB': [
+        {
+            quote: 'USDC',
+            pivots: ['USDT'],
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'ETH',
+            pivots: undefined,
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'USDT',
+            pivots: undefined,
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'TUSD',
+            pivots: ['USDT'],
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'FDUSD',
+            pivots: ['USDT'],
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'wBETH',
+            pivots: ['ETH'],
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'HAY',
+            pivots: ['WBNB'],
+            exportToInternalDashboard: true
+        },
+        {
+            quote: 'SnBNB',
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'USDC': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'ETH',
             pivots: undefined,
             exportToInternalDashboard: true
@@ -174,59 +159,44 @@ const watchedPairs = {
         },
         {
             quote: 'TUSD',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'FDUSD',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'wBETH',
-            pivots: undefined,
+            pivots: ['ETH'],
             exportToInternalDashboard: true
         },
         {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'ETH': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'USDT',
-            pivots: undefined,
+            pivots: ['USDC'],
             exportToInternalDashboard: true
         },
         {
             quote: 'TUSD',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
         {
             quote: 'FDUSD',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
         {
@@ -236,37 +206,17 @@ const watchedPairs = {
         },
         {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'USDT': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'TUSD',
             pivots: undefined,
             exportToInternalDashboard: true
@@ -278,7 +228,7 @@ const watchedPairs = {
         },
         {
             quote: 'wBETH',
-            pivots: undefined,
+            pivots: ['WBNB', 'ETH'],
             exportToInternalDashboard: true
         },
         {
@@ -288,242 +238,65 @@ const watchedPairs = {
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'TUSD': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'FDUSD',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'wBETH',
-            pivots: undefined,
+            pivots: ['USDT', 'WBNB', 'ETH'],
             exportToInternalDashboard: true
         },
         {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['USDT', 'WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'FDUSD': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'TUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'wBETH',
-            pivots: undefined,
+            pivots: ['USDT', 'WBNB', 'ETH'],
             exportToInternalDashboard: true
         },
         {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['USDT'],
             exportToInternalDashboard: true
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['USDT', 'WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'wBETH': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'TUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'FDUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'HAY',
-            pivots: undefined,
+            pivots: ['ETH'],
             exportToInternalDashboard: true
         },
         {
             quote: 'SnBNB',
-            pivots: undefined,
+            pivots: ['ETH', 'WBNB'],
             exportToInternalDashboard: true
         },
     ],
     'HAY': [
         {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'TUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'FDUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'wBETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
             quote: 'SnBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-    ],
-    'SnBNB': [
-        {
-            quote: 'BTCB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'WBNB',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDC',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'ETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'USDT',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'TUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'FDUSD',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'wBETH',
-            pivots: undefined,
-            exportToInternalDashboard: true
-        },
-        {
-            quote: 'HAY',
-            pivots: undefined,
+            pivots: ['WBNB'],
             exportToInternalDashboard: true
         },
     ],

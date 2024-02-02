@@ -64,7 +64,7 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
             console.log(`minStartBlock is ${minStartBlock}`);
 
             console.log(`${fnName()}: getting pools to fetch`);
-            const poolsToFetch = await getAllPoolsToFetch(univ3Factory);
+            const poolsToFetch = await getAllPoolsToFetch(univ3Factory, web3Provider);
             console.log(`${fnName()}: found ${poolsToFetch.length} pools to fetch from ${univ3Config.pairsToFetch.length} pairs in config`);
 
             const poolsData = [];
@@ -128,41 +128,62 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
     }
 }
 
-async function getAllPoolsToFetch(univ3Factory) {
+async function getAllPoolsToFetch(univ3Factory, web3Provider) {
     const poolsToFetch = [];
     // find existing pools via multicall
     const promises = [];
-    for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of pancakeswapV3_FEES) {
-            const token0 = getConfTokenBySymbol(pairToFetch.token0);
-            if (!token0) {
-                throw new Error('Cannot find token in global config with symbol: ' + pairToFetch.token0);
-            }
-            const token1 = getConfTokenBySymbol(pairToFetch.token1);
-            if (!token1) {
-                throw new Error('Cannot find token in global config with symbol: ' + pairToFetch.token1);
+    for (const token0Symbol of univ3Config.pairsToFetch) {
+        for (const token1Symbol of univ3Config.pairsToFetch) {
+            if(token0Symbol == token1Symbol) {
+                continue;
             }
 
-            promises.push(univ3Factory.getPool(token0.address, token1.address, fee));
+            for (const fee of pancakeswapV3_FEES) {
+                const token0 = getConfTokenBySymbol(token0Symbol);
+                if (!token0) {
+                    throw new Error('Cannot find token in global config with symbol: ' + token0Symbol);
+                }
+                const token1 = getConfTokenBySymbol(token1Symbol);
+                if (!token1) {
+                    throw new Error('Cannot find token in global config with symbol: ' + token1Symbol);
+                }
+
+                promises.push(univ3Factory.getPool(token0.address, token1.address, fee));
+            }
         }
     }
 
     await Promise.all(promises);
     let promiseIndex = 0;
-    for (const pairToFetch of univ3Config.pairsToFetch) {
-        for (const fee of pancakeswapV3_FEES) {
-            const poolAddress = await promises[promiseIndex];
-            if (poolAddress == ethers.constants.AddressZero) {
-                console.log(`${fnName()}[${pairToFetch.token0}-${pairToFetch.token1}-${fee}]: pool does not exist`);
-            } else {
-                poolsToFetch.push({
-                    pairToFetch,
-                    fee,
-                    poolAddress
-                });
+    for (const token0 of univ3Config.pairsToFetch) {
+        for (const token1 of univ3Config.pairsToFetch) {
+            if(token0 == token1) {
+                continue;
             }
+            for (const fee of pancakeswapV3_FEES) {
+                const poolAddress = await promises[promiseIndex];
+                if (poolAddress == ethers.constants.AddressZero) {
+                    console.log(`${fnName()}[${token0}-${token1}-${fee}]: pool does not exist`);
+                } else {
+                    const univ3PairContract = new Contract(poolAddress, univ3Config.pancakeswapV3PairAbi, web3Provider);
+                    const poolToken0 = await univ3PairContract.token0();
+                    const token0Conf = getConfTokenBySymbol(token0);
+                    if(poolToken0.toLowerCase() != token0Conf.address.toLowerCase()) {
+                        // ignore
+                    } else {
+                        poolsToFetch.push({
+                            pairToFetch: {
+                                token0,
+                                token1},
+                            fee,
+                            poolAddress
+                        });
+                    }
 
-            promiseIndex++;
+                }
+
+                promiseIndex++;
+            }
         }
     }
     return poolsToFetch;
@@ -409,6 +430,6 @@ function getSaveData(token0, token1, latestData) {
     return `${latestData.blockNumber},${JSON.stringify(saveValue)}\n`;
 }
 
-// pancakeswapV3HistoryFetcher();
+pancakeswapV3HistoryFetcher();
 
 module.exports = { pancakeswapV3HistoryFetcher };
