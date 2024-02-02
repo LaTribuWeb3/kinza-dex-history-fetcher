@@ -21,7 +21,8 @@ const CONSTANT_1e18 = new BigNumber(10).pow(18);
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
 const CONSTANT_BLOCK_INTERVAL = 200;
 
-const RPC_URL = process.env.RPC_URL;
+const RPC_URL = process.env.PANCAKE_V3_RPC_URL;
+const STEP_MAX = Number(process.env.PANCAKE_V3_STEP_MAX) || Number.MAX_SAFE_INTEGER;
 
 const runEverySec = 60 * 60;
 
@@ -233,6 +234,8 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
 
         cptError = 0;
         fromBlock = toBlock +1;
+
+        blockStep = Math.min(STEP_MAX, blockStep);
     }
 
     // at the end, update latest data blockNumber because even if no events were emitted, we must 

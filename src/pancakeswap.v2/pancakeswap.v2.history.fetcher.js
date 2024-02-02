@@ -12,7 +12,8 @@ const { generateUnifiedFileUniv2 } = require('./pancakeswap.v2.unified.generator
 const { DATA_DIR, DEFAULT_STEP_BLOCK } = require('../utils/constants');
 const path = require('path');
 
-const RPC_URL = process.env.RPC_URL;
+const RPC_URL = process.env.PANCAKE_V2_RPC_URL;
+const STEP_MAX = Number(process.env.PANCAKE_V2_STEP_MAX) || Number.MAX_SAFE_INTEGER;
 const MINIMUM_TO_APPEND = process.env.MINIMUM_TO_APPEND || 100;
 
 const runEverySec = 60 * 60;
@@ -196,8 +197,6 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     let lastEventBlock = startBlock;
     let lastBlockSaved = 0;
 
-    const maxStep = Number(process.env.STEP_MAX) || Number.MAX_SAFE_INTEGER;
-
     while(toBlock < currentBlock) {
 
         toBlock = fromBlock + blockStep - 1;
@@ -264,7 +263,7 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
             // blockStep = Math.min(maxStep, blockStep*2);
         }
 
-        blockStep = Math.min(maxStep, blockStep*2);
+        blockStep = Math.min(STEP_MAX, blockStep*2);
 
         fromBlock = toBlock +1;
     }
@@ -273,6 +272,8 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
         const textToAppend = liquidityValues.map(_ => `${_.block},${_.r0},${_.r1}`);
         fs.appendFileSync(historyFileName, textToAppend.join('\n') + '\n');
     }
+
+    console.log(`${fnName()}[${pairKey}]: END FETCH`);
 
     // return true if the last event fetched is more than 500k blocks old
     return {pairKey: pairKey, isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};

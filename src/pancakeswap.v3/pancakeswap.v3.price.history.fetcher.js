@@ -17,7 +17,8 @@ const { pairsToFetch } = require('../global.config');
 
 // save liquidity data every 'CONSTANT_BLOCK_INTERVAL' blocks
 
-const RPC_URL = process.env.RPC_URL;
+const RPC_URL = process.env.PANCAKE_V3_PRICE_RPC_URL;
+const STEP_MAX = Number(process.env.PANCAKE_V3_PRICE_STEP_MAX) || Number.MAX_SAFE_INTEGER;
 
 const runEverySec = 60 * 60;
 
@@ -322,6 +323,9 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
             blockStep = blockStep * 2;
         }
         fromBlock = toBlock +1;
+
+        
+        blockStep = Math.min(STEP_MAX, blockStep);
     }
 
     return swapResults;

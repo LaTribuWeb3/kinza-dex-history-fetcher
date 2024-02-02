@@ -176,15 +176,6 @@ function getMedianPricesAllPlatforms(base, quote, lastBlock, currentBlock, pivot
 }
 
 function getMedianPricesForPlatform(platform, base, quote, lastBlock, currentBlock, pivots, fileAlreadyExists) {
-    // specific case for curve with USDC as the quote or base
-    // add USDT as a step
-    if(pivots && platform == 'curve' && pivots[0] == 'WETH' && quote == 'USDC') {
-        pivots = ['WETH', 'USDT'];
-    }
-    if(pivots && platform == 'curve' && pivots[0] == 'WETH' && base == 'USDC') {
-        pivots = ['USDT', 'WETH'];
-    }
-        
     const prices = getPricesAtBlockForIntervalViaPivots(platform, base, quote, lastBlock + 1, currentBlock, pivots);
     if(!prices) {
         console.log(`Cannot find prices for ${base}->${quote}(pivot: ${pivots}) for platform: ${platform}`);
