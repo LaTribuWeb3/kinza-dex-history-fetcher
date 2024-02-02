@@ -243,6 +243,7 @@ async function FetchpancakeswapV3HistoryForPair(pairConfig, fee, web3Provider, p
     latestData.blockNumber = currentBlock;
     fs.writeFileSync(latestDataFilePath, JSON.stringify(latestData));
 
+    console.log(`${fnName()}[${pairConfig.token0}-${pairConfig.token1}-${fee}]: ENDED`);
     // return true because the pool exists
     return latestData.poolAddress;
 }
@@ -371,6 +372,6 @@ function getSaveData(token0, token1, latestData) {
     return `${latestData.blockNumber},${JSON.stringify(saveValue)}\n`;
 }
 
-// pancakeswapV3HistoryFetcher();
+pancakeswapV3HistoryFetcher();
 
 module.exports = { pancakeswapV3HistoryFetcher };

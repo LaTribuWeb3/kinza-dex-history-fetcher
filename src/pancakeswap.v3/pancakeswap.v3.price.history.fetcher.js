@@ -131,7 +131,7 @@ async function FetchpancakeswapV3PriceHistoryForPair(pairToFetch, pools, web3Pro
     const token0Conf = getConfTokenBySymbol(pairToFetch.token0);
     const token1Conf = getConfTokenBySymbol(pairToFetch.token1);
 
-    const label = `[${token0Conf.symbol}-${token1Conf.symbol}]`;
+    const label = `FetchpancakeswapV3PriceHistoryForPair[${token0Conf.symbol}-${token1Conf.symbol}]`;
 
     // get the first block to fetch
     const priceHistoryFilename = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3', `${pairToFetch.token0}-${pairToFetch.token1}-unified-data.csv`);
@@ -248,6 +248,7 @@ async function FetchpancakeswapV3PriceHistoryForPair(pairToFetch, pools, web3Pro
         fromBlock = toBlock +1;
     }
 
+    console.log(`${label}: ENDED`);
     return {lastBlockWithData, token0: token0Conf.symbol, token1: token1Conf.symbol};
 }
 

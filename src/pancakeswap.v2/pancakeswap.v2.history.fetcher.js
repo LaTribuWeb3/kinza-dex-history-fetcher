@@ -56,7 +56,7 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
                     }
                     const pairKey = `${token0}-${token1}`;
                     console.log(`${fnName()}: Start fetching pair ` + pairKey);
-                    const promise = FetchHistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
+                    const promise = FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, `${DATA_DIR}/pancakeswapv2/${pairKey}_pancakeswapv2.csv`, currentBlock, minStartBlock);
                     promises.push(promise);
                     await sleep(10000);
                 }
@@ -142,7 +142,7 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
  * @param {string} pairKey
  * @returns {bool} if the pool is stale (no new data since 500k blocks)
  */
-async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, currentBlock, minStartBlock) {
+async function FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, historyFileName, currentBlock, minStartBlock) {
     const token0Symbol = pairKey.split('-')[0];
     const token0Address = tokens[token0Symbol].address;
     const token1Symbol = pairKey.split('-')[1];
