@@ -409,6 +409,6 @@ function getSaveData(token0, token1, latestData) {
     return `${latestData.blockNumber},${JSON.stringify(saveValue)}\n`;
 }
 
-pancakeswapV3HistoryFetcher();
+// pancakeswapV3HistoryFetcher();
 
 module.exports = { pancakeswapV3HistoryFetcher };

@@ -212,8 +212,8 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
                 if(event.blockNumber > lastBlockSaved + DEFAULT_STEP_BLOCK) {
                     lastBlockSaved = event.blockNumber;
                     values[event.blockNumber] = {
-                        r0: events[0].args.reserve0.toString(),
-                        r1: events[0].args.reserve1.toString()
+                        r0: event.args.reserve0.toString(),
+                        r1: event.args.reserve1.toString()
                     };
                 }
             }            
@@ -257,6 +257,6 @@ async function FetchHistoryForPair(web3Provider, pairKey, historyFileName, curre
     return {isStale: lastEventBlock < currentBlock - 500_000, pairAddress: pairAddress};
 }
 
-pancakeswapV2HistoryFetcher();
+// pancakeswapV2HistoryFetcher();
 
 module.exports = { pancakeswapV2HistoryFetcher };

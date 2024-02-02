@@ -368,5 +368,5 @@ async function fetchEvents(startBlock, endBlock, contract, token0Conf, token1Con
     return swapResults;
 }
 
-pancakeswapV3PriceHistoryFetcher(true);
+// pancakeswapV3PriceHistoryFetcher();
 module.exports = { pancakeswapV3PriceHistoryFetcher };
