@@ -140,6 +140,11 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
 
 // ignore a number of pool because they are empty and are taking a lot of time to fetch FOR NOTHING
 function ignorePool(token0, token1) {
+
+    if(token0 == 'HAY' ||token1 == 'HAY') {
+        return true;
+    }
+
     switch(`${token0}-${token1}`) {
         default:
             return false;
@@ -154,6 +159,8 @@ function ignorePool(token0, token1) {
         case 'ETH-wBETH':
         case 'TUSD-USDT':
         case 'HAY-USDT':
+        case 'SnBNB-USDT':
+        case 'USDT-SnBNB':
             return true;
     }
 }

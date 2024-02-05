@@ -76,6 +76,8 @@ async function PrecomputeDashboardData() {
                 blockTimeStamps[blockNumber] = await retry(async () => (await web3Provider.getBlock(blockNumber)).timestamp, []);
             }
 
+            console.log(blockTimeStamps);
+
             // AVG step is the amount of blocks to be used when computing average liquidity
             // meaning that if we want the average liquidity at block X since 30 days
             // we will take the data from 'X - avgStep' to 'X'

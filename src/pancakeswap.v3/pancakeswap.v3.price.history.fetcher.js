@@ -142,6 +142,8 @@ function ignorePool(token0, token1) {
         case 'wBETH-BTCB':
         case 'WBNB-wBETH':
         case 'wBETH-WBNB':
+        case 'TUSD-WBNB':
+        case 'WBNB-TUSD':
             return true;
     }
 }
