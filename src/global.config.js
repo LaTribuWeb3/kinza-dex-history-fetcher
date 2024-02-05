@@ -14,6 +14,11 @@ const tokens = {
         address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c',
         dustAmount: 0.000001
     },
+    DAI: {
+        decimals: 18,
+        address: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
+        dustAmount: 0.01
+    },
     USDC: {
         decimals: 18,
         address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
