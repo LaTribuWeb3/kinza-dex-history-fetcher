@@ -4,12 +4,15 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "prettier-format": "prettier --config .prettierrc \"./src/**/*.js\" --write",
+        "prettier-watch": "onchange --await-write-finish 2000 \"src/**/*.js\" -- prettier --write {{changed}}"
     },
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "eslint": "^8.54.0"
+        "eslint": "^8.54.0",
+        "onchange": "^7.1.0",
+        "prettier": "^2.8.8"
     },
     "dependencies": {
         "@0xsequence/multicall": "0.43.34",
