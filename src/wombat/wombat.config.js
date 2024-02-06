@@ -948,6 +948,42 @@ const wombatPricePairs = [
         token1: 'USDT'
       }
     ]
+  },
+  {
+    poolAddress: '0x0520451B19AD0bb00eD35ef391086A692CFC74B2',
+    poolName: 'SmartHAYPool',
+    abi: HighCovRatioFeePoolV2Abi,
+    tokens: [
+      {
+        symbol: 'HAY',
+        address: '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5',
+        decimals: 18
+      },
+      {
+        symbol: 'USDC',
+        address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+        decimals: 18
+      },
+      {
+        symbol: 'USDT',
+        address: '0x55d398326f99059fF775485246999027B3197955',
+        decimals: 18
+      }
+    ],
+    pairs: [
+      {
+        token0: 'DAI',
+        token1: 'USDC'
+      },
+      {
+        token0: 'DAI',
+        token1: 'USDT'
+      },
+      {
+        token0: 'USDC',
+        token1: 'USDT'
+      }
+    ]
   }
 ];
 
