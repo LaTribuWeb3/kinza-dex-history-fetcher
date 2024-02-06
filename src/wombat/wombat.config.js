@@ -17,7 +17,45 @@ const wombatPools = [
     },
 ]
 
+const wombatPricePairs = [
+    {
+        poolAddress: "0x312Bc7eAAF93f1C60Dc5AfC115FcCDE161055fb0",
+        poolName: 'MainPool',
+        abi: HighCovRatioFeePoolV2Abi,
+        tokens: [
+            {
+                symbol: 'DAI',
+                address: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
+                decimals: 18
+            },
+            {
+                symbol: 'USDC',
+                address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+                decimals: 18
+            },
+            {
+                symbol: 'USDT',
+                address: '0x55d398326f99059fF775485246999027B3197955',
+                decimals: 18
+            },
+        ],
+        pairs: [
+            {
+                token0: 'DAI',
+                token1: 'USDC'
+            },
+            {
+                token0: 'DAI',
+                token1: 'USDT'
+            },
+            {
+                token0: 'USDC',
+                token1: 'USDT'
+            },
+        ]
+
+    }
+]
 
 
-
-module.exports = { HighCovRatioFeePoolV2Abi, wombatPoolAssetAbi, wombatPools };
+module.exports = { HighCovRatioFeePoolV2Abi, wombatPoolAssetAbi, wombatPools, wombatPricePairs };
