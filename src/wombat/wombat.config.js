@@ -972,11 +972,11 @@ const wombatPricePairs = [
     ],
     pairs: [
       {
-        token0: 'DAI',
+        token0: 'HAY',
         token1: 'USDC'
       },
       {
-        token0: 'DAI',
+        token0: 'HAY',
         token1: 'USDT'
       },
       {
