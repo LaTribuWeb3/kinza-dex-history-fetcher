@@ -37,13 +37,6 @@ async function TestFunction(amountIn) {
     promises.push(contract.cash());
     promises.push(contract.liability());
   }
-  const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)); // token X delta (amount inputted) with 18 decimals
-
-  const onchainSmartContractQuote = await poolContract.quotePotentialSwap(
-    poolTokens[0],
-    poolTokens[1],
-    Dx.toString(10)
-  );
 
   const promisesResults = await Promise.all(promises);
 
@@ -53,6 +46,7 @@ async function TestFunction(amountIn) {
   let Lx = undefined; // token X liability with 18 decimals
   let Ly = undefined; // token Y liability with 18 decimals
   let A = undefined; // Amplification factor with 18 decimals
+  const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)); // token X delta (amount inputted) with 18 decimals
 
   for (let i = 0; i < promisesResults.length; i++) {
     if (i === 0) {
@@ -77,6 +71,13 @@ async function TestFunction(amountIn) {
   console.log('X token Address:', poolTokens[0]);
   console.log('Y token:', getTokenSymbolByAddress(poolTokens[1]));
   console.log('Y token Address:', poolTokens[1]);
+
+  // Call the onchain swap quote function
+  const onchainSmartContractQuote = await poolContract.quotePotentialSwap(
+    poolTokens[0],
+    poolTokens[1],
+    Dx.toString(10)
+  );
 
   // Call the swap quote function
   const coreV2 = new CoreV2();
