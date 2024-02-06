@@ -9,8 +9,7 @@ const { providers } = require('@0xsequence/multicall');
 const { getTokenSymbolByAddress } = require('../utils/token.utils');
 dotenv.config();
 
-// const RPC_URL = process.env.WOMBAT_RPC_URL;
-const RPC_URL = process.env.WOMBAT_ALTERNATIVE_RPC_URL;
+const RPC_URL = process.env.WOMBAT_RPC_URL;
 WombatHistoryFetcher();
 
 
@@ -68,7 +67,7 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
     for (const tokenAddress of poolAssets) {
         poolAssetsContracts.push(new Contract(tokenAddress, wombatPoolAssetAbi, multicallProvider));
     }
-    for (let i = startBlock; i < currentBlock; i += blockStep) {
+    for (let i = startBlock; i + blockStep < currentBlock; i += blockStep) {
         const promises = [];
         promises.push(poolContract.ampFactor({ blockTag: i }));
         for (const contract of poolAssetsContracts) {
