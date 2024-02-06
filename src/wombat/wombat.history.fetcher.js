@@ -1,12 +1,14 @@
 const { ethers, Contract } = require('ethers');
 const dotenv = require('dotenv');
-const { wombatPools, wombatPoolAssetAbi } = require('./wombat.config');
+const { wombatPools } = require('./wombat.config');
 const { DATA_DIR } = require('../utils/constants');
 const fs = require('fs');
 const path = require('path');
 const { readLastLine } = require('../utils/utils');
 const { providers } = require('@0xsequence/multicall');
 const { getTokenSymbolByAddress } = require('../utils/token.utils');
+const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
+const { wombatAbis } = require('../utils/abis');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
@@ -41,7 +43,13 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   const currentBlock = (await web3Provider.getBlockNumber()) - 10;
 
   const blockStep = 1200;
-  let startBlock = currentBlock - 10519200;
+  const oneYearInBlocks = 10519200;
+  let startBlock = currentBlock - oneYearInBlocks;
+  const creationBlock = await GetContractCreationBlockNumber(web3Provider, pool.poolAddress);
+  if (creationBlock - oneYearInBlocks > startBlock) {
+    startBlock = creationBlock - oneYearInBlocks + 100000;
+  }
+
   if (fs.existsSync(historyFileName)) {
     const lastLine = await readLastLine(historyFileName);
     const lastLineBlock = Number(lastLine.split(',')[0]) + 1;
@@ -63,7 +71,7 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
 
   const poolAssetsContracts = [];
   for (const tokenAddress of poolAssets) {
-    poolAssetsContracts.push(new Contract(tokenAddress, wombatPoolAssetAbi, multicallProvider));
+    poolAssetsContracts.push(new Contract(tokenAddress, wombatAbis.wombatPoolAssetAbi, multicallProvider));
   }
   for (let i = startBlock; i + blockStep < currentBlock; i += blockStep) {
     const promises = [];
