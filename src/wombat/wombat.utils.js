@@ -60,9 +60,13 @@ class CoreV2 {
     const D = this._calculateD(Ax, Ay, Lx, Ly, A);
     console.log('D:', D.toString(10));
     const rx_ = this._wdivEquivalent(Ax.plus(Dx), Lx);
-    const b = this._coefficientFunc(Lx, Ly, rx_, D, A);
+    console.log('rx_:', rx_.toString(10));
+    const b = this._calculateB(Lx, Ly, rx_, A, D);
+    console.log('b:', b.toString(10));
     const ry_ = this._solveQuad(b, A);
+    console.log('ry_:', ry_.toString(10));
     const Dy = this._wmulEquivalent(Ly, ry_).minus(Ay);
+    console.log('Dy:', Dy.toString(10));
     return Dy.isNegative() ? Dy.abs() : Dy;
   }
 
@@ -116,16 +120,17 @@ class CoreV2 {
    * @param A amplification factor
    * @return The quadratic equation b coefficient ("b")
    */
-  _coefficientFunc(Lx, Ly, rx_, D, A) {
-    // Convert all inputs to BigNumbers to ensure divine precision
+  _calculateB(Lx, Ly, rx_, A, D) {
     Lx = new BigNumber(Lx);
     Ly = new BigNumber(Ly);
     rx_ = new BigNumber(rx_);
-    D = new BigNumber(D);
     A = new BigNumber(A);
+    D = new BigNumber(D);
 
-    // Perform the specific calculation as defined in the Solidity function
-    const b = this._wmulEquivalent(Lx, this._wdivEquivalent(rx_.minus(A), rx_)).minus(this._wdivEquivalent(D, Ly));
+    // Calculate b as per the given expression
+    const b = Lx.multipliedBy(this._wdivEquivalent(rx_.minus(A), rx_))
+      .dividedBy(Ly)
+      .minus(this._wdivEquivalent(D, Ly));
 
     return b;
   }
