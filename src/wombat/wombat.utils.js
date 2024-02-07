@@ -99,7 +99,6 @@ class CoreV2 {
     Ly = new BigNumber(Ly);
     A = new BigNumber(A);
 
-    // Perform the calculation as per the Solidity code
     const D = Ax.plus(Ay).minus(
       this._wmulEquivalent(A, Lx.multipliedBy(Lx).dividedBy(Ax).plus(Ly.multipliedBy(Ly).dividedBy(Ay)))
     );
