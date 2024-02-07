@@ -18,13 +18,19 @@ class CoreV2 {
    * reproduce wmul function from safeMath
    */
   _wmulEquivalent(value1, value2) {
-    return value1.multipliedBy(value2).dividedBy(new BigNumber('1e18'));
+    return value1.multipliedBy(value2).plus(this.WAD.dividedBy(2)).dividedToIntegerBy(this.WAD);
   }
   /**
    * reproduce wdiv function from safeMath
    */
   _wdivEquivalent(value1, value2) {
-    return value1.multipliedBy(new BigNumber('1e18')).dividedBy(value2);
+    if (value2.isZero()) {
+      throw new Error('Division by zero');
+    }
+
+    // Perform the operation: ((x * WAD) + (y / 2)) / y
+    // Note: Since Solidity truncates results towards zero, we emulate this by using the integer part of the division result
+    return value1.multipliedBy(this.WAD).plus(value2.dividedBy(2)).dividedToIntegerBy(value2);
   }
 
   /**
@@ -43,6 +49,7 @@ class CoreV2 {
     Ay = new BigNumber(Ay);
     Lx = new BigNumber(Lx);
     Ly = new BigNumber(Ly);
+    Dx = new BigNumber(Dx);
     A = new BigNumber(A);
     if (Lx.isZero() || Ly.isZero()) {
       // in case div of 0
@@ -51,6 +58,7 @@ class CoreV2 {
 
     // compute D
     const D = this._calculateD(Ax, Ay, Lx, Ly, A);
+    console.log('D:', D.toString(10));
     const rx_ = this._wdivEquivalent(Ax.plus(Dx), Lx);
     const b = this._coefficientFunc(Lx, Ly, rx_, D, A);
     const ry_ = this._solveQuad(b, A);

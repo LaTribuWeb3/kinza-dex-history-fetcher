@@ -46,7 +46,7 @@ async function TestFunction(amountIn) {
   let Lx = undefined; // token X liability with 18 decimals
   let Ly = undefined; // token Y liability with 18 decimals
   let A = undefined; // Amplification factor with 18 decimals
-  const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)); // token X delta (amount inputted) with 18 decimals
+  const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)).toString(10); // token X delta (amount inputted) with 18 decimals
 
   for (let i = 0; i < promisesResults.length; i++) {
     if (i === 0) {
@@ -65,26 +65,37 @@ async function TestFunction(amountIn) {
       Ly = promisesResults[i].toString(10);
     }
   }
+  console.log('--Pool Info--');
   console.log('pool', pool.poolName);
   console.log('pool address', pool.poolAddress);
+  console.log('--Pool Assets--');
   console.log('X token:', getTokenSymbolByAddress(poolTokens[0]));
   console.log('X token Address:', poolTokens[0]);
   console.log('Y token:', getTokenSymbolByAddress(poolTokens[1]));
   console.log('Y token Address:', poolTokens[1]);
+  console.log('---');
 
   // Call the onchain swap quote function
-  const onchainSmartContractQuote = await poolContract.quotePotentialSwap(
-    poolTokens[0],
-    poolTokens[1],
-    Dx.toString(10)
-  );
+  const onchainSmartContractQuote = await poolContract.quotePotentialSwap(poolTokens[0], poolTokens[1], Dx);
 
   // Call the swap quote function
   const coreV2 = new CoreV2();
+  console.log('---');
+  console.log('--CoreV2--');
+  console.log('parameters passed to swapQuoteFunc');
+  console.log('Ax:', Ax);
+  console.log('Ay:', Ay);
+  console.log('Lx:', Lx);
+  console.log('Ly:', Ly);
+  console.log('Dx:', Dx);
+  console.log('A:', A);
+  console.log('---');
   const quote = coreV2._swapQuoteFunc(Ax, Ay, Lx, Ly, Dx, A);
 
   // Output the result
   const decimals = new BigNumber(10).pow(18);
+  console.log('---');
+  console.log('---');
   console.log(
     `Onchain - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${normalize(
       onchainSmartContractQuote.potentialOutcome,
