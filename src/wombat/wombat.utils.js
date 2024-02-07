@@ -50,7 +50,7 @@ class CoreV2 {
     }
 
     // compute D
-    const D = this._invariantFunc(Lx, Ax, Ly, Ay, A);
+    const D = this._calculateD(Ax, Ay, Lx, Ly, A);
     const rx_ = this._wdivEquivalent(Ax.plus(Dx), Lx);
     const b = this._coefficientFunc(Lx, Ly, rx_, D, A);
     const ry_ = this._solveQuad(b, A);
@@ -68,9 +68,7 @@ class CoreV2 {
   _solveQuad(b, c) {
     b = new BigNumber(b);
     c = new BigNumber(c);
-
-    // Assuming an appropriate initial guess for the Babylonian method;
-    // This might need adjustment based on your specific requirements or context.
+    // Define the initial guess for the Babylonian square root calculation
     const initialGuess = b;
 
     // Calculate the argument for the sqrt function
@@ -85,36 +83,20 @@ class CoreV2 {
     return x;
   }
 
-  /**
-   * @notice Equation to get invariant constant between token x and token y
-   * @dev This function always returns >= 0
-   * @param Lx liability of token x
-   * @param rx cov ratio of token x
-   * @param Ly liability of token x
-   * @param ry cov ratio of token y
-   * @param A amplification factor
-   * @return The invariant constant between token x and token y ("D")
-   */
-  _invariantFunc(Lx, rx, Ly, ry, A) {
-    // Convert all inputs to BigNumbers to ensure divine precision
+  _calculateD(Ax, Ay, Lx, Ly, A) {
+    // Convert all inputs to BigNumber instances for high precision arithmetic
+    Ax = new BigNumber(Ax);
+    Ay = new BigNumber(Ay);
     Lx = new BigNumber(Lx);
-    rx = new BigNumber(rx);
     Ly = new BigNumber(Ly);
-    ry = new BigNumber(ry);
     A = new BigNumber(A);
 
-    // Define weighted multiplication and division functions
-    const wmul = (x, y) => x.multipliedBy(y).dividedBy(new BigNumber('1e18'));
-    const wdiv = (x, y) => x.multipliedBy(new BigNumber('1e18')).dividedBy(y);
+    // Perform the calculation as per the Solidity code
+    const D = Ax.plus(Ay).minus(
+      this._wmulEquivalent(A, Lx.multipliedBy(Lx).dividedBy(Ax).plus(Ly.multipliedBy(Ly).dividedBy(Ay)))
+    );
 
-    // Perform calculations using BigNumber methods
-    const a = wmul(Lx, rx).plus(wmul(Ly, ry));
-    const b = wmul(A, wdiv(Lx, rx).plus(wdiv(Ly, ry)));
-
-    // Calculate the invariant constant "D" without imposing non-negativity
-    const D = a.minus(b);
-
-    return D; // Return D directly, mirroring the Solidity function's behavior
+    return D;
   }
 
   /**
@@ -135,12 +117,8 @@ class CoreV2 {
     D = new BigNumber(D);
     A = new BigNumber(A);
 
-    // Define weighted multiplication and division functions
-    const wmul = (x, y) => x.multipliedBy(y).dividedBy(new BigNumber('1e18'));
-    const wdiv = (x, y) => x.multipliedBy(new BigNumber('1e18')).dividedBy(y);
-
     // Perform the specific calculation as defined in the Solidity function
-    const b = wmul(Lx, wdiv(rx_.minus(A), rx_)).minus(wdiv(D, Ly));
+    const b = this._wmulEquivalent(Lx, this._wdivEquivalent(rx_.minus(A), rx_)).minus(this._wdivEquivalent(D, Ly));
 
     return b;
   }

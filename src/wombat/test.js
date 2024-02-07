@@ -92,8 +92,9 @@ async function TestFunction(amountIn) {
     )} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
   console.log(
-    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.div(decimals)} ${getTokenSymbolByAddress(poolTokens[1])}`
+    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.div(
+      decimals
+    )} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
 }
-
 TestFunction(100000);
