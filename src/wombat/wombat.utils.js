@@ -128,10 +128,9 @@ class CoreV2 {
     D = new BigNumber(D);
 
     // Calculate b as per the given expression
-    const b = Lx.multipliedBy(this._wdivEquivalent(rx_.minus(A), rx_))
+    const b = Lx.multipliedBy(rx_.minus(this._wdivEquivalent(A, rx_)))
       .dividedBy(Ly)
       .minus(this._wdivEquivalent(D, Ly));
-
     return b;
   }
   // Custom square root function using the Babylonian method
