@@ -50,19 +50,19 @@ async function TestFunction(amountIn) {
 
   for (let i = 0; i < promisesResults.length; i++) {
     if (i === 0) {
-      A = BigNumber(promisesResults[i].toString());
+      A = promisesResults[i].toString(10);
     }
     if (i === 1) {
-      Ax = BigNumber(promisesResults[i].toString());
+      Ax = promisesResults[i].toString(10);
     }
     if (i === 2) {
-      Lx = BigNumber(promisesResults[i].toString());
+      Lx = promisesResults[i].toString(10);
     }
     if (i === 3) {
-      Ay = BigNumber(promisesResults[i].toString());
+      Ay = promisesResults[i].toString(10);
     }
     if (i === 4) {
-      Ly = BigNumber(promisesResults[i].toString());
+      Ly = promisesResults[i].toString(10);
     }
   }
   console.log('pool', pool.poolName);
@@ -92,9 +92,7 @@ async function TestFunction(amountIn) {
     )} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
   console.log(
-    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote
-      .div(decimals)
-      .toString()} ${getTokenSymbolByAddress(poolTokens[1])}`
+    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.div(decimals)} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
 }
 
