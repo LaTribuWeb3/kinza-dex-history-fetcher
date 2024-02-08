@@ -9,6 +9,7 @@ const { providers } = require('@0xsequence/multicall');
 const { getTokenSymbolByAddress } = require('../utils/token.utils');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
 const { wombatAbis } = require('../utils/abis');
+const { findValidBlockTag, readWombatPoolStartBlock, updateWombatPoolConfig } = require('./wombat.utils');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
@@ -50,6 +51,16 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
     startBlock = creationBlock - oneYearInBlocks + 100000;
   }
 
+  const findBlock = readWombatPoolStartBlock(pool.poolAddress);
+
+  if (findBlock) {
+    startBlock = findBlock;
+  }
+  if (!findBlock) {
+    startBlock = await findValidBlockTag(poolContract, startBlock, currentBlock);
+    updateWombatPoolConfig(pool.poolAddress, startBlock);
+  }
+
   if (fs.existsSync(historyFileName)) {
     const lastLine = await readLastLine(historyFileName);
     const lastLineBlock = Number(lastLine.split(',')[0]) + 1;
@@ -66,7 +77,10 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
       tokensStr.push(`liability_${getTokenSymbolByAddress(token)}`);
     }
 
-    fs.writeFileSync(historyFileName, `blocknumber,ampFactor,${tokensStr.join(',')}\n`);
+    fs.writeFileSync(
+      historyFileName,
+      `blocknumber,ampFactor,haircutRate,startCovRatio,endCovRatio,${tokensStr.join(',')}\n`
+    );
   }
 
   const poolAssetsContracts = [];
@@ -76,6 +90,9 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   for (let i = startBlock; i + blockStep < currentBlock; i += blockStep) {
     const promises = [];
     promises.push(poolContract.ampFactor({ blockTag: i }));
+    promises.push(poolContract.haircutRate({ blockTag: i }));
+    promises.push(poolContract.startCovRatio({ blockTag: i }));
+    promises.push(poolContract.endCovRatio({ blockTag: i }));
     for (const contract of poolAssetsContracts) {
       promises.push(contract.cash({ blockTag: i }));
       promises.push(contract.liability({ blockTag: i }));
