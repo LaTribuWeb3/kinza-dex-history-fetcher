@@ -1,7 +1,7 @@
 // index.js
 const { BigNumber } = require('bignumber.js');
 const dotenv = require('dotenv');
-const CoreV2 = require('./wombat.utils');
+const CoreV2 = require('./wombat.core.v2');
 const { ethers, Contract } = require('ethers');
 const { providers } = require('@0xsequence/multicall');
 const { wombatPools } = require('./wombat.config');
