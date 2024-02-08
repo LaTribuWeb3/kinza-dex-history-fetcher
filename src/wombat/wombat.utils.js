@@ -1,4 +1,5 @@
 const { BigNumber } = require('bignumber.js');
+const fs = require('fs');
 
 /**
  * @title CoreV2
@@ -27,12 +28,37 @@ class CoreV2 {
     if (value2.isZero()) {
       throw new Error('Division by zero');
     }
-
-    // Perform the operation: ((x * WAD) + (y / 2)) / y
-    // Note: Since Solidity truncates results towards zero, we emulate this by using the integer part of the division result
     return value1.multipliedBy(this.WAD).plus(value2.dividedBy(2)).dividedToIntegerBy(value2);
   }
 
+  _quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate) {
+    const idealToAmount = this._swapQuoteFunc(Ax, Ay, Lx, Ly, Dx, A);
+    console.log('idealToAmount:', idealToAmount.toString(10));
+    Ax = new BigNumber(Ax);
+    Ay = new BigNumber(Ay);
+    Lx = new BigNumber(Lx);
+    Ly = new BigNumber(Ly);
+    Dx = new BigNumber(Dx);
+    A = new BigNumber(A);
+    haircutRate = new BigNumber(haircutRate);
+
+    if ((Dx.gt(BigNumber(0)) && Ay.lt(idealToAmount)) || (Dx.lt(BigNumber(0)) && Ax.cash().lt(Dx.abs()))) {
+      throw new Error('WOMBAT_CASH_NOT_ENOUGH');
+    }
+
+    let actualToAmount, haircut;
+
+    if (Dx.gt(BigNumber(0))) {
+      // normal quote
+      haircut = this._wmulEquivalent(idealToAmount, haircutRate);
+      actualToAmount = idealToAmount.minus(haircut);
+    } else {
+      // exact output swap quote count haircut in the fromAmount
+      actualToAmount = idealToAmount;
+      haircut = this._wmulEquivalent(Dx.abs(), haircutRate);
+    }
+    return { actualToAmount, haircut };
+  }
   /**
    * @notice Core Wombat stableswap equation
    * @dev This function always returns >= 0
@@ -156,6 +182,30 @@ class CoreV2 {
     }
     return z;
   }
+}
+
+function getAvailableWombat(dataDir) {
+  const summary = JSON.parse(fs.readFileSync(`${dataDir}/wombat/wombat_pools_summary.json`));
+  const available = {};
+  for (const poolName of Object.keys(summary)) {
+    for (const [token, reserveValue] of Object.entries(summary[poolName])) {
+      if (!available[token]) {
+        available[token] = {};
+      }
+
+      for (const [tokenB, reserveValueB] of Object.entries(summary[poolName])) {
+        if (tokenB === token) {
+          continue;
+        }
+
+        available[token][tokenB] = available[token][tokenB] || {};
+        available[token][tokenB][poolName] = available[token][tokenB][poolName] || {};
+        available[token][tokenB][poolName][token] = reserveValue;
+        available[token][tokenB][poolName][tokenB] = reserveValueB;
+      }
+    }
+  }
+  return available;
 }
 
 module.exports = CoreV2;

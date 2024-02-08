@@ -16,7 +16,7 @@ async function TestFunction(amountIn) {
   //instantiate RPC
   const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
   const multicallProvider = new providers.MulticallProvider(web3Provider);
-  const pool = wombatPools[1];
+  const pool = wombatPools[0];
   const poolContract = new Contract(pool.poolAddress, pool.poolAbi, multicallProvider);
 
   //get poolTokens
@@ -33,6 +33,7 @@ async function TestFunction(amountIn) {
   }
   const promises = [];
   promises.push(poolContract.ampFactor());
+  promises.push(poolContract.haircutRate());
   for (const contract of poolAssetsContracts) {
     promises.push(contract.cash());
     promises.push(contract.liability());
@@ -46,6 +47,7 @@ async function TestFunction(amountIn) {
   let Lx = undefined; // token X liability with 18 decimals
   let Ly = undefined; // token Y liability with 18 decimals
   let A = undefined; // Amplification factor with 18 decimals
+  let haircutRate = undefined; // haircut rate with 18 decimals
   const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)).toString(10); // token X delta (amount inputted) with 18 decimals
 
   for (let i = 0; i < promisesResults.length; i++) {
@@ -53,21 +55,25 @@ async function TestFunction(amountIn) {
       A = promisesResults[i].toString(10);
     }
     if (i === 1) {
-      Ax = promisesResults[i].toString(10);
+      haircutRate = promisesResults[i].toString(10);
     }
     if (i === 2) {
-      Lx = promisesResults[i].toString(10);
+      Ax = promisesResults[i].toString(10);
     }
     if (i === 3) {
-      Ay = promisesResults[i].toString(10);
+      Lx = promisesResults[i].toString(10);
     }
     if (i === 4) {
+      Ay = promisesResults[i].toString(10);
+    }
+    if (i === 5) {
       Ly = promisesResults[i].toString(10);
     }
   }
   console.log('--Pool Info--');
   console.log('pool', pool.poolName);
   console.log('pool address', pool.poolAddress);
+  console.log('pool haircut rate', haircutRate);
   console.log('--Pool Assets--');
   console.log('X token:', getTokenSymbolByAddress(poolTokens[0]));
   console.log('X token Address:', poolTokens[0]);
@@ -90,7 +96,7 @@ async function TestFunction(amountIn) {
   console.log('Dx:', Dx);
   console.log('A:', A);
   console.log('---');
-  const quote = coreV2._swapQuoteFunc(Ax, Ay, Lx, Ly, Dx, A);
+  const quote = coreV2._quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate);
 
   // Output the result
   const decimals = new BigNumber(10).pow(18);
@@ -103,9 +109,9 @@ async function TestFunction(amountIn) {
     )} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
   console.log(
-    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.div(
+    `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.actualToAmount.div(
       decimals
     )} ${getTokenSymbolByAddress(poolTokens[1])}`
   );
 }
-TestFunction(100000);
+TestFunction(50000);
