@@ -118,7 +118,6 @@ class CoreV2 {
 
   _quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate) {
     const idealToAmount = this._swapQuoteFunc(Ax, Ay, Lx, Ly, Dx, A);
-    console.log('idealToAmount:', idealToAmount.toString(10));
     Ax = new BigNumber(Ax);
     Ay = new BigNumber(Ay);
     Lx = new BigNumber(Lx);
@@ -169,15 +168,10 @@ class CoreV2 {
 
     // compute D
     const D = this._calculateD(Ax, Ay, Lx, Ly, A);
-    console.log('D:', D.toString(10));
     const rx_ = this._wdivEquivalent(Ax.plus(Dx), Lx);
-    console.log('rx_:', rx_.toString(10));
     const b = this._calculateB(Lx, Ly, rx_, A, D);
-    console.log('b:', b.toString(10));
     const ry_ = this._solveQuad(b, A);
-    console.log('ry_:', ry_.toString(10));
     const Dy = this._wmulEquivalent(Ly, ry_).minus(Ay);
-    console.log('Dy:', Dy.toString(10));
     return Dy.isNegative() ? Dy.abs() : Dy;
   }
 
