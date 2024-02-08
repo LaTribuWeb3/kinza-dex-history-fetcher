@@ -1,24 +1,22 @@
 const { ethers, Contract } = require('ethers');
 const dotenv = require('dotenv');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
-const curveConfig = require('./curve.config');
+const wombatConfig = require('./wombat.config');
 const fs = require('fs');
 const path = require('path');
 const { sleep, fnName, roundTo } = require('../utils/utils');
 
 const { RecordMonitoring } = require('../utils/monitoring');
 const { DATA_DIR } = require('../utils/constants');
-const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
+const { normalize } = require('../utils/token.utils');
 
 dotenv.config();
 const RPC_URL = process.env.RPC_URL;
 
-const runnerName = 'Curve Price Fetcher';
+const runnerName = 'Wombat Price Fetcher';
 const runEverySec = 60 * 60;
-/**
- * the main entrypoint of the script, will run the fetch against all pool in the config
- */
-async function CurvePriceHistoryFetcher(onlyOnce = false) {
+
+async function WombatPriceHistoryFetcher(onlyOnce = false) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const start = Date.now();
@@ -30,14 +28,14 @@ async function CurvePriceHistoryFetcher(onlyOnce = false) {
         runEvery: runEverySec
       });
 
-      if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve'))) {
-        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve'), { recursive: true });
+      if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'wombat'))) {
+        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'wombat'), { recursive: true });
       }
 
       const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 
       const currentBlock = (await web3Provider.getBlockNumber()) - 10;
-      for (const fetchConfig of curveConfig.curvePricePairs) {
+      for (const fetchConfig of wombatConfig.wombatPricePairs) {
         await FetchPriceHistory(fetchConfig, currentBlock, web3Provider);
       }
 
@@ -72,6 +70,7 @@ async function CurvePriceHistoryFetcher(onlyOnce = false) {
     }
   }
 }
+
 /**
  *
  * @param {{poolAddress: string, poolName: string, tokens: {symbol: string, address: string}[],pairs: {token0: string,token1: string}[]}} fetchConfig
@@ -91,7 +90,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
     DATA_DIR,
     'precomputed',
     'price',
-    'curve',
+    'wombat',
     `${fetchConfig.poolName}-lastfetch.json`
   );
 
@@ -105,18 +104,18 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
     // clear the CSV if any
     for (const pair of fetchConfig.pairs) {
       fs.rmSync(
-        path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair.token0}-${pair.token1}-unified-data.csv`),
+        path.join(DATA_DIR, 'precomputed', 'price', 'wombat', `${pair.token0}-${pair.token1}-unified-data.csv`),
         { force: true }
       );
       fs.rmSync(
-        path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair.token1}-${pair.token0}-unified-data.csv`),
+        path.join(DATA_DIR, 'precomputed', 'price', 'wombat', `${pair.token1}-${pair.token0}-unified-data.csv`),
         { force: true }
       );
     }
   }
 
   // fetch all blocks where an event occured since startBlock
-  const curveContract = new Contract(fetchConfig.poolAddress, fetchConfig.abi, web3Provider);
+  const wombatContract = new Contract(fetchConfig.poolAddress, fetchConfig.abi, web3Provider);
 
   let priceData = initPriceData(fetchConfig);
 
@@ -127,7 +126,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
     let toBlock = Math.min(currentBlock, fromBlock + blockStep - 1);
 
     try {
-      const events = await curveContract.queryFilter('TokenExchange', fromBlock, toBlock);
+      const events = await wombatContract.queryFilter('Swap', fromBlock, toBlock);
 
       console.log(
         `${fnName()}[${fetchConfig.poolName}]: [${fromBlock} - ${toBlock}] found ${events.length} events (fetched ${
@@ -137,12 +136,25 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
 
       if (events.length != 0) {
         for (const e of events) {
-          const baseIndex = e.args.sold_id.toNumber();
-          const quoteIndex = e.args.bought_id.toNumber();
+          // const baseIndex = e.args.fromAmount.toNumber();
+          // const quoteIndex = e.args.toAmount.toNumber();
 
           // find the tokens
-          const baseToken = getConfTokenBySymbol(fetchConfig.tokens[baseIndex].symbol);
-          const quoteToken = getConfTokenBySymbol(fetchConfig.tokens[quoteIndex].symbol);
+          const baseToken = fetchConfig.tokens.find((token) => token.address == e.args.fromToken);
+
+          if (baseToken == undefined) {
+            console.log('Token with address ' + e.args.fromToken + ' unkown');
+          }
+
+          const quoteToken = fetchConfig.tokens.find((token) => token.address == e.args.toToken);
+
+          if (quoteToken == undefined) {
+            console.log('Token with address ' + e.args.toToken + ' unkown');
+          }
+
+          if (baseToken == undefined || quoteToken == undefined) {
+            continue;
+          }
 
           // check if in the list of pair to get
           // if baseToken = USDC and quoteToken = DAI
@@ -154,8 +166,8 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
                 (_.token0 == quoteToken.symbol && _.token1 == baseToken.symbol)
             )
           ) {
-            const tokenSold = normalize(e.args.tokens_sold, baseToken.decimals);
-            const tokenBought = normalize(e.args.tokens_bought, quoteToken.decimals);
+            const tokenSold = normalize(e.args.fromAmount, baseToken.decimals);
+            const tokenBought = normalize(e.args.toAmount, quoteToken.decimals);
 
             // ignore trades too low
             if (tokenSold < baseToken.dustAmount || tokenBought < quoteToken.dustAmount) {
@@ -199,7 +211,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
         nextSaveBlock = fromBlock + 100_000;
       }
     } catch (e) {
-      // console.log('query filter error:', e);
+      console.log('Error fetching events:', e);
       blockStep = Math.round(blockStep / 2);
       if (blockStep < 1000) {
         blockStep = 1000;
@@ -229,7 +241,7 @@ function initPriceData(fetchConfig) {
 function savePriceData(priceData) {
   for (const pair of Object.keys(priceData)) {
     console.log(`saving data for pair ${pair}`);
-    const fileName = path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair}-unified-data.csv`);
+    const fileName = path.join(DATA_DIR, 'precomputed', 'price', 'wombat', `${pair}-unified-data.csv`);
     if (!fs.existsSync(fileName)) {
       fs.writeFileSync(fileName, 'blocknumber,price\n');
     }
@@ -243,4 +255,4 @@ function savePriceData(priceData) {
   }
 }
 
-module.exports = { CurvePriceHistoryFetcher };
+WombatPriceHistoryFetcher();
