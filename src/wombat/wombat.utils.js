@@ -1,6 +1,4 @@
 const { BigNumber } = require('bignumber.js');
-const fs = require('fs');
-const { start } = require('repl');
 
 /**
  * @title CoreV2
@@ -269,30 +267,6 @@ class CoreV2 {
     }
     return z;
   }
-}
-
-function getAvailableWombat(dataDir) {
-  const summary = JSON.parse(fs.readFileSync(`${dataDir}/wombat/wombat_pools_summary.json`));
-  const available = {};
-  for (const poolName of Object.keys(summary)) {
-    for (const [token, reserveValue] of Object.entries(summary[poolName])) {
-      if (!available[token]) {
-        available[token] = {};
-      }
-
-      for (const [tokenB, reserveValueB] of Object.entries(summary[poolName])) {
-        if (tokenB === token) {
-          continue;
-        }
-
-        available[token][tokenB] = available[token][tokenB] || {};
-        available[token][tokenB][poolName] = available[token][tokenB][poolName] || {};
-        available[token][tokenB][poolName][token] = reserveValue;
-        available[token][tokenB][poolName][tokenB] = reserveValueB;
-      }
-    }
-  }
-  return available;
 }
 
 module.exports = CoreV2;

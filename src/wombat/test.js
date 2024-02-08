@@ -9,7 +9,6 @@ const { wombatAbis } = require('../utils/abis');
 const { getTokenSymbolByAddress, normalize } = require('../utils/token.utils');
 dotenv.config();
 
-// Instantiate CoreV2
 const RPC_URL = process.env.WOMBAT_RPC_URL;
 
 async function TestFunction(amountIn) {
@@ -94,7 +93,7 @@ async function TestFunction(amountIn) {
   // Call the onchain swap quote function
   const onchainSmartContractQuote = await poolContract.quotePotentialSwap(poolTokens[0], poolTokens[1], Dx);
 
-  // Call the swap quote function
+  // Instantiate CoreV2
   const coreV2 = new CoreV2();
   console.log('---');
   console.log('--CoreV2--');
@@ -106,6 +105,7 @@ async function TestFunction(amountIn) {
   console.log('Dx:', Dx);
   console.log('A:', A);
   console.log('---');
+  // Call the swap quote function
   const quote = coreV2._HighCovRatioFeePoolV2QuoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio);
 
   // Output the result
