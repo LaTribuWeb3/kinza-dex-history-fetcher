@@ -34,6 +34,8 @@ async function TestFunction(amountIn) {
   const promises = [];
   promises.push(poolContract.ampFactor());
   promises.push(poolContract.haircutRate());
+  promises.push(poolContract.startCovRatio());
+  promises.push(poolContract.endCovRatio());
   for (const contract of poolAssetsContracts) {
     promises.push(contract.cash());
     promises.push(contract.liability());
@@ -48,6 +50,8 @@ async function TestFunction(amountIn) {
   let Ly = undefined; // token Y liability with 18 decimals
   let A = undefined; // Amplification factor with 18 decimals
   let haircutRate = undefined; // haircut rate with 18 decimals
+  let startCovRatio = undefined; // start coverage ratio with 18 decimals
+  let endCovRatio = undefined; // start coverage ratio with 18 decimals
   const Dx = new BigNumber(amountIn).times(new BigNumber(10).pow(18)).toString(10); // token X delta (amount inputted) with 18 decimals
 
   for (let i = 0; i < promisesResults.length; i++) {
@@ -58,15 +62,21 @@ async function TestFunction(amountIn) {
       haircutRate = promisesResults[i].toString(10);
     }
     if (i === 2) {
-      Ax = promisesResults[i].toString(10);
+      startCovRatio = promisesResults[i].toString(10);
     }
     if (i === 3) {
-      Lx = promisesResults[i].toString(10);
+      endCovRatio = promisesResults[i].toString(10);
     }
     if (i === 4) {
-      Ay = promisesResults[i].toString(10);
+      Ax = promisesResults[i].toString(10);
     }
     if (i === 5) {
+      Lx = promisesResults[i].toString(10);
+    }
+    if (i === 6) {
+      Ay = promisesResults[i].toString(10);
+    }
+    if (i === 7) {
       Ly = promisesResults[i].toString(10);
     }
   }
@@ -96,7 +106,7 @@ async function TestFunction(amountIn) {
   console.log('Dx:', Dx);
   console.log('A:', A);
   console.log('---');
-  const quote = coreV2._quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate);
+  const quote = coreV2._HighCovRatioFeePoolV2QuoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio);
 
   // Output the result
   const decimals = new BigNumber(10).pow(18);
@@ -106,12 +116,12 @@ async function TestFunction(amountIn) {
     `Onchain - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${normalize(
       onchainSmartContractQuote.potentialOutcome,
       18
-    )} ${getTokenSymbolByAddress(poolTokens[1])}`
+    )} ${getTokenSymbolByAddress(poolTokens[1])}, fees: ${normalize(onchainSmartContractQuote.haircut, 18)}`
   );
   console.log(
     `Local Core v2 - ${amountIn} ${getTokenSymbolByAddress(poolTokens[0])} swapped for ${quote.actualToAmount.div(
       decimals
-    )} ${getTokenSymbolByAddress(poolTokens[1])}`
+    )} ${getTokenSymbolByAddress(poolTokens[1])}, fees: ${quote.haircut.div(decimals)}`
   );
 }
-TestFunction(50000);
+TestFunction(100000);

@@ -1,5 +1,6 @@
 const { BigNumber } = require('bignumber.js');
 const fs = require('fs');
+const { start } = require('repl');
 
 /**
  * @title CoreV2
@@ -29,6 +30,92 @@ class CoreV2 {
       throw new Error('Division by zero');
     }
     return value1.multipliedBy(this.WAD).plus(value2.dividedBy(2)).dividedToIntegerBy(value2);
+  }
+
+  _toWad(number) {
+    return new BigNumber(number).multipliedBy(new BigNumber(10).pow(18));
+  }
+
+  _fromWad(wad) {
+    return new BigNumber(wad).dividedBy(new BigNumber(10).pow(18));
+  }
+
+  _HighCovRatioFeePoolV2QuoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio) {
+    let { actualToAmount, haircut } = this._quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate);
+    Ax = new BigNumber(Ax);
+    Ay = new BigNumber(Ay);
+    Lx = new BigNumber(Lx);
+    Ly = new BigNumber(Ly);
+    Dx = new BigNumber(Dx);
+    A = new BigNumber(A);
+    haircutRate = new BigNumber(haircutRate);
+    startCovRatio = new BigNumber(startCovRatio);
+    endCovRatio = new BigNumber(endCovRatio);
+
+    if (Dx.gt(BigNumber(0))) {
+      const finalFromAssetCovRatio = this._wdivEquivalent(Ax.plus(Dx), Lx);
+      if (finalFromAssetCovRatio.gt(startCovRatio)) {
+        const initialCovRatio = this._wdivEquivalent(Ax, Lx);
+        const finalCovRatio = finalFromAssetCovRatio;
+        const highCovRatioFee = this._highCovRatioFee(initialCovRatio, finalCovRatio, startCovRatio, endCovRatio);
+        const highCovRatioFeeTimesActualAmount = this._toWad(this._wmulEquivalent(actualToAmount, highCovRatioFee));
+        actualToAmount = actualToAmount.minus(highCovRatioFeeTimesActualAmount);
+        haircut = haircut.plus(highCovRatioFeeTimesActualAmount);
+      }
+    } else {
+      const finalToAssetCovRatio = this._wdivEquivalent(Ay.plus(actualToAmount), Ly);
+      if (finalToAssetCovRatio.gt(startCovRatio)) {
+        return { actualToAmount, haircut };
+      }
+      if (this._wdivEquivalent(Ay, Ly).gte(endCovRatio)) {
+        throw new Error('WOMBAT_COV_RATIO_LIMIT_EXCEEDED');
+      }
+      actualToAmount = this._findUpperBound(Ax, Ay, Lx, Ly, A, haircutRate, actualToAmount, endCovRatio);
+      haircut = this._quoteFrom(Ax, Ay, Lx, Ly, actualToAmount, A, haircutRate).haircut;
+    }
+
+    return { actualToAmount, haircut };
+  }
+
+  _findUpperBound(Ax, Ay, Lx, Ly, A, haircutRate, actualToAmount, endCovRatio) {
+    let high = this._wmulEquivalent(Lx, endCovRatio).minus(Ax);
+    let low = 1;
+    let { quote } = this._quoteFrom(Ax, Ay, Lx, Ly, high, A, haircutRate);
+    if (quote.lt(actualToAmount)) {
+      throw new Error('WOMBAT_COV_RATIO_LIMIT_EXCEEDED');
+    }
+    while (low.lt(high)) {
+      let mid = low.plus(high).dividedBy(2);
+      let { quote } = this._quoteFrom(Ax, Ay, Lx, Ly, mid, A, haircutRate);
+      if (quote.lte(actualToAmount)) {
+        high = mid;
+      } else {
+        low = mid.plus(this._toWad(1));
+      }
+    }
+    return high;
+  }
+
+  _highCovRatioFee(initialCovRatio, finalCovRatio, startCovRatio, endCovRatio) {
+    if (finalCovRatio.gt(endCovRatio)) {
+      throw new Error('WOMBAT_COV_RATIO_EXCEEDED');
+    } else if (finalCovRatio.lte(startCovRatio) || finalCovRatio.lte(initialCovRatio)) {
+      return 0;
+    }
+    let a, b, fee;
+
+    a = initialCovRatio.lte(startCovRatio)
+      ? new BigNumber(0)
+      : initialCovRatio.minus(startCovRatio).multipliedBy(initialCovRatio.minus(startCovRatio));
+
+    b = finalCovRatio.minus(startCovRatio).multipliedBy(finalCovRatio.minus(startCovRatio));
+
+    fee = b
+      .minus(a)
+      .dividedBy(finalCovRatio.minus(initialCovRatio))
+      .dividedBy(2)
+      .dividedBy(endCovRatio.minus(startCovRatio));
+    return fee;
   }
 
   _quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate) {
