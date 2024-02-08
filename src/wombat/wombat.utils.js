@@ -106,4 +106,77 @@ function readWombatPoolStartBlock(poolAddress) {
   }
 }
 
-module.exports = { wombatGetAddressBySymbol, findValidBlockTag, readWombatPoolStartBlock, updateWombatPoolConfig };
+async function computeLiquidityForSlippageWombat(
+  baseQty,
+  targetPrice,
+  Ax,
+  Ay,
+  Lx,
+  Ly,
+  A,
+  haircutRate,
+  startCovRatio,
+  endCovRatio
+) {
+  let low = undefined;
+  let high = undefined;
+  let lowTo = undefined;
+  let highTo = undefined;
+  let qtyFrom = baseQty * 2n;
+  const exitBoundsDiff = 0.1 / 100;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    let { actualToAmount, haircut } = this._HighCovRatioFeePoolV2QuoteFrom(
+      Ax,
+      Ay,
+      Lx,
+      Ly,
+      qtyFrom,
+      A,
+      haircutRate,
+      startCovRatio,
+      endCovRatio
+    );
+
+    const newQtyTo = actualToAmount;
+
+    const currentPrice = newQtyTo.dividedBy(qtyFrom);
+
+    const variation = high && low ? high.dividedBy(low).minus(1).toNumber() : Infinity;
+
+    if (low && high && variation < exitBoundsDiff) {
+      const base = high.plus(low).dividedBy(2n);
+      const quote = highTo.plus(lowTo).dividedBy(2n);
+      return { base: base.toFixed(), quote: quote.toFixed() };
+    }
+
+    if (currentPrice.gt(targetPrice)) {
+      low = qtyFrom;
+      lowTo = newQtyTo;
+
+      if (!high) {
+        qtyFrom = qtyFrom.multipliedBy(2n);
+      } else {
+        qtyFrom = qtyFrom.plus(high.minus(low).dividedBy(2n));
+      }
+    } else {
+      high = qtyFrom;
+      highTo = newQtyTo;
+
+      if (!low) {
+        qtyFrom = qtyFrom.dividedBy(2n);
+      } else {
+        qtyFrom = qtyFrom.minus(high.minus(low).dividedBy(2n));
+      }
+    }
+  }
+}
+
+module.exports = {
+  wombatGetAddressBySymbol,
+  computeLiquidityForSlippageWombat,
+  findValidBlockTag,
+  readWombatPoolStartBlock,
+  updateWombatPoolConfig
+};
