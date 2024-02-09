@@ -127,7 +127,7 @@ async function computeLiquidityForSlippageWombat(
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    let { actualToAmount, haircut } = this._HighCovRatioFeePoolV2QuoteFrom(
+    let { actualToAmount, } = this._HighCovRatioFeePoolV2QuoteFrom(
       Ax,
       Ay,
       Lx,
