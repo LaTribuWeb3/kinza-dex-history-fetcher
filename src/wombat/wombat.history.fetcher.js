@@ -14,9 +14,9 @@ const { generateUnifiedFileWombat } = require('./wombat.unified.generator');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
-WombatHistoryFetcher();
+// WombatHistoryFetcher();
 
-async function WombatHistoryFetcher() {
+async function wombatHistoryFetcher() {
   //check data dir exists
   if (!fs.existsSync(path.join(DATA_DIR, 'wombat'))) {
     fs.mkdirSync(path.join(DATA_DIR, 'wombat'), { recursive: true });
@@ -28,6 +28,7 @@ async function WombatHistoryFetcher() {
 
   const promises = [];
   for (const pool of wombatPools) {
+    console.log(`Starting ${pool.poolName}`);
     const promise = fetchHistoryForPool(pool, multicallProvider, web3Provider);
     // await promise(); // uncomment to exec sequentially, better for debug
     promises.push(promise);
@@ -114,4 +115,8 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
     const lineToWrite = promisesResults.map((_) => _.toString()).join(',');
     fs.appendFileSync(historyFileName, `${i},${lineToWrite}\n`);
   }
+
+  console.log(`Ending ${pool.poolName}`);
 }
+
+module.exports = { wombatHistoryFetcher };

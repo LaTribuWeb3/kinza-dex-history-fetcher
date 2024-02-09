@@ -323,6 +323,9 @@ function computeLiquidityForAvgSlippageWombatPool(
       if (low && high) {
         if (variation < exitBoundsDiff) {
           const base = high.plus(low).div(2);
+          if (!highTo) {
+            highTo = qtyTo;
+          }
           const quote = highTo.plus(lowTo).div(2);
           return { base, quote };
         }
