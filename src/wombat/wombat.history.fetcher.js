@@ -4,7 +4,7 @@ const { wombatPools } = require('./wombat.config');
 const { DATA_DIR } = require('../utils/constants');
 const fs = require('fs');
 const path = require('path');
-const { readLastLine } = require('../utils/utils');
+const { readLastLine, sleep } = require('../utils/utils');
 const { providers } = require('@0xsequence/multicall');
 const { getTokenSymbolByAddress } = require('../utils/token.utils');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
@@ -25,9 +25,16 @@ async function WombatHistoryFetcher() {
   const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
   const multicallProvider = new providers.MulticallProvider(web3Provider);
 
+  const promises = [];
   for (const pool of wombatPools) {
-    await fetchHistoryForPool(pool, multicallProvider, web3Provider);
+    const promise = fetchHistoryForPool(pool, multicallProvider, web3Provider);
+    // await promise(); // uncomment to exec sequentially
+    promises.push(promise);
+
+    await sleep(2000);
   }
+
+  await Promise.all(promises);
 }
 async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   const poolContract = new Contract(pool.poolAddress, pool.poolAbi, multicallProvider);
@@ -46,20 +53,6 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   const blockStep = 1200;
   const oneYearInBlocks = 10519200;
   let startBlock = currentBlock - oneYearInBlocks;
-  const creationBlock = await GetContractCreationBlockNumber(web3Provider, pool.poolAddress);
-  if (creationBlock - oneYearInBlocks > startBlock) {
-    startBlock = creationBlock - oneYearInBlocks + 100000;
-  }
-
-  const findBlock = readWombatPoolStartBlock(pool.poolAddress);
-
-  if (findBlock) {
-    startBlock = findBlock;
-  }
-  if (!findBlock) {
-    startBlock = await findValidBlockTag(poolContract, startBlock, currentBlock);
-    updateWombatPoolConfig(pool.poolAddress, startBlock);
-  }
 
   if (fs.existsSync(historyFileName)) {
     const lastLine = await readLastLine(historyFileName);
@@ -67,6 +60,24 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
     if (!Number.isNaN(lastLineBlock)) {
       startBlock = lastLineBlock + blockStep - 1;
     }
+  } else {
+    const creationBlock = await GetContractCreationBlockNumber(web3Provider, pool.poolAddress);
+    if (startBlock < creationBlock) {
+      startBlock = creationBlock + 800_000; // 2 weeks after pool creation
+    }
+  
+    // find the min block where the archive node call works
+    let findBlock = readWombatPoolStartBlock(pool.poolAddress);
+    if (!findBlock) {
+      findBlock = await findValidBlockTag(poolContract, startBlock, currentBlock);
+    }
+
+    // set startBlock as the first block where the archive node call works
+    if (startBlock < findBlock) {
+      startBlock = findBlock;
+    }
+    updateWombatPoolConfig(pool.poolAddress, startBlock);
+
   }
 
   ///if file does not exist, create it and write headers
