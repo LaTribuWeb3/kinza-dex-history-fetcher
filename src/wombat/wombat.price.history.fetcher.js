@@ -11,12 +11,13 @@ const { DATA_DIR } = require('../utils/constants');
 const { normalize } = require('../utils/token.utils');
 
 dotenv.config();
-const RPC_URL = process.env.RPC_URL;
+const RPC_URL = process.env.WOMBAT_PRICE_RPC_URL;
+const STEP_MAX = Number(process.env.WOMBAT_STEP_MAX) || Number.MAX_SAFE_INTEGER;
 
 const runnerName = 'Wombat Price Fetcher';
 const runEverySec = 60 * 60;
 
-async function WombatPriceHistoryFetcher(onlyOnce = false) {
+async function wombatPriceHistoryFetcher(onlyOnce = false) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const start = Date.now();
@@ -35,9 +36,14 @@ async function WombatPriceHistoryFetcher(onlyOnce = false) {
       const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 
       const currentBlock = (await web3Provider.getBlockNumber()) - 10;
+      const promises = [];
       for (const fetchConfig of wombatConfig.wombatPricePairs) {
-        await FetchPriceHistory(fetchConfig, currentBlock, web3Provider);
+        console.log(`Starting price fetch for ${fetchConfig.poolName}`);
+        promises.push(FetchPriceHistory(fetchConfig, currentBlock, web3Provider));
+        await sleep(2000);
       }
+
+      await Promise.all(promises);
 
       const runEndDate = Math.round(Date.now() / 1000);
       await RecordMonitoring({
@@ -120,7 +126,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
   let priceData = initPriceData(fetchConfig);
 
   let fromBlock = startBlock;
-  let blockStep = 100000;
+  let blockStep = 10_000;
   let nextSaveBlock = fromBlock + 100_000; // save data every 100k blocks
   while (fromBlock <= currentBlock) {
     let toBlock = Math.min(currentBlock, fromBlock + blockStep - 1);
@@ -142,17 +148,17 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
           // find the tokens
           const baseToken = fetchConfig.tokens.find((token) => token.address == e.args.fromToken);
 
-          if (baseToken == undefined) {
-            console.log('Token with address ' + e.args.fromToken + ' unkown');
-          }
+          // if (baseToken == undefined) {
+          //   console.log('Token with address ' + e.args.fromToken + ' unkown');
+          // }
 
           const quoteToken = fetchConfig.tokens.find((token) => token.address == e.args.toToken);
 
-          if (quoteToken == undefined) {
-            console.log('Token with address ' + e.args.toToken + ' unkown');
-          }
+          // if (quoteToken == undefined) {
+          //   console.log('Token with address ' + e.args.toToken + ' unkown');
+          // }
 
-          if (baseToken == undefined || quoteToken == undefined) {
+          if (!baseToken || !quoteToken) {
             continue;
           }
 
@@ -203,10 +209,16 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
         blockStep = blockStep * 2;
       }
 
+      if (blockStep >= STEP_MAX) {
+        blockStep = STEP_MAX;
+      }
+
       fromBlock = toBlock + 1;
 
       if (nextSaveBlock <= fromBlock) {
         savePriceData(priceData);
+        const lastFetchData = { lastBlockFetched: fromBlock - 1 };
+        fs.writeFileSync(lastFetchFileName, JSON.stringify(lastFetchData, null, 2));
         priceData = initPriceData(fetchConfig);
         nextSaveBlock = fromBlock + 100_000;
       }
@@ -226,6 +238,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
 
   const lastFetchData = { lastBlockFetched: currentBlock };
   fs.writeFileSync(lastFetchFileName, JSON.stringify(lastFetchData, null, 2));
+  console.log(`Ending price fetch for ${fetchConfig.poolName}`);
 }
 
 function initPriceData(fetchConfig) {
@@ -240,7 +253,7 @@ function initPriceData(fetchConfig) {
 
 function savePriceData(priceData) {
   for (const pair of Object.keys(priceData)) {
-    console.log(`saving data for pair ${pair}`);
+    // console.log(`saving data for pair ${pair}`);
     const fileName = path.join(DATA_DIR, 'precomputed', 'price', 'wombat', `${pair}-unified-data.csv`);
     if (!fs.existsSync(fileName)) {
       fs.writeFileSync(fileName, 'blocknumber,price\n');
@@ -255,4 +268,6 @@ function savePriceData(priceData) {
   }
 }
 
-WombatPriceHistoryFetcher();
+// wombatPriceHistoryFetcher();
+
+module.exports = { wombatPriceHistoryFetcher };

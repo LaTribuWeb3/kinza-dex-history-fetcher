@@ -1,7 +1,7 @@
 // index.js
 const { BigNumber } = require('bignumber.js');
 const dotenv = require('dotenv');
-const CoreV2 = require('./wombat.utils');
+const CoreV2 = require('./wombat.core.v2');
 const { ethers, Contract } = require('ethers');
 const { providers } = require('@0xsequence/multicall');
 const { wombatPools } = require('./wombat.config');
@@ -10,6 +10,28 @@ const { getTokenSymbolByAddress, normalize } = require('../utils/token.utils');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
+
+async function test() {
+  /*
+    blocknumber,ampFactor,haircutRate,startCovRatio,endCovRatio,cash_DAI,liability_DAI,cash_USDC,liability_USDC,cash_USDT,liability_USDT
+
+  */
+  const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
+  const pool = wombatPools[0];
+  const poolContract = new Contract(pool.poolAddress, pool.poolAbi, web3Provider);
+
+  const baseValue = new BigNumber(1000).times(new BigNumber(10).pow(18)).toString(10);
+  const val = await poolContract.quotePotentialSwap(
+    '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3',
+    '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+    baseValue
+  );
+
+  console.log(`base: ${normalize(baseValue, 18)}, quote: ${normalize(val.potentialOutcome, 18)}`);
+  console.log(`fee: ${normalize(val.haircut, 18)}`);
+}
+
+test();
 
 async function TestFunction(amountIn) {
   //instantiate RPC
@@ -124,4 +146,4 @@ async function TestFunction(amountIn) {
     )} ${getTokenSymbolByAddress(poolTokens[1])}, fees: ${quote.haircut.div(decimals)}`
   );
 }
-TestFunction(100000);
+// TestFunction(100000);

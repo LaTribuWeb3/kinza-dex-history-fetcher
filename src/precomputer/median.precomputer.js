@@ -147,11 +147,11 @@ async function precomputeAndSaveMedianPrices(platformDirectory, platform, base, 
 function getMedianPricesAllPlatforms(base, quote, lastBlock, currentBlock, pivots, fileAlreadyExists) {
   let allPrices = [];
   for (const subPlatform of PLATFORMS) {
-    if (subPlatform == 'uniswapv3' && ((base == 'stETH' && quote == 'WETH') || (base == 'WETH' && quote == 'stETH'))) {
-      // stETH/WETH pair for univ3 is fake data
-      // so ignore it
+    if (subPlatform == 'pancakeswapv2') {
+      // ignore pancakeswap v2 for the prices
       continue;
     }
+
     const prices = getPricesAtBlockForIntervalViaPivots(subPlatform, base, quote, lastBlock + 1, currentBlock, pivots);
     if (!prices || prices.length == 0) {
       console.log(`Cannot find prices for ${base}->${quote}(pivot: ${pivots}) for platform: ${subPlatform}`);
