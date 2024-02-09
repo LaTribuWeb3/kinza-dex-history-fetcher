@@ -305,8 +305,8 @@ function getUnifiedDataForInterval(
   stepBlock = DEFAULT_STEP_BLOCK,
   alreadyUsedPools
 ) {
-  if (platform == 'curve') {
-    return getUnifiedDataForIntervalForCurve(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock, alreadyUsedPools);
+  if (platform == 'wombat') {
+    return getUnifiedDataForIntervalForWombat(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock, alreadyUsedPools);
   }
 
   const filename = `${fromSymbol}-${toSymbol}-unified-data.csv`;
@@ -428,7 +428,7 @@ function readDataFromFile(fullFilename) {
   return fs.readFileSync(fullFilename, 'utf-8').split('\n');
 }
 
-function getUnifiedDataForIntervalForCurve(
+function getUnifiedDataForIntervalForWombat(
   fromSymbol,
   toSymbol,
   fromBlock,
@@ -436,9 +436,9 @@ function getUnifiedDataForIntervalForCurve(
   stepBlock = DEFAULT_STEP_BLOCK,
   alreadyUsedPools
 ) {
-  // for curve, find all files in the precomputed/curve directory that math the fromSymbol-toSymbol.*.csv
+  // for wombat, find all files in the precomputed/wombat directory that math the fromSymbol-toSymbol.*.csv
   const searchString = `${fromSymbol}-${toSymbol}`;
-  const directory = path.join(DATA_DIR, 'precomputed', 'curve');
+  const directory = path.join(DATA_DIR, 'precomputed', 'wombat');
   const matchingFiles = fs.readdirSync(directory).filter((_) => _.startsWith(searchString) && _.endsWith('.csv'));
   // console.log(`found ${matchingFiles.length} matching files for ${searchString}`);
 

@@ -1,36 +1,12 @@
-const { wombatPricePairs } = require('./wombat.config');
 const { DATA_DIR } = require('../utils/constants');
 const fs = require('fs');
 const path = require('path');
 const CoreV2 = require('./wombat.core.v2');
 const { default: BigNumber } = require('bignumber.js');
 const { normalize } = require('../utils/token.utils');
-const { computeLiquidityForSlippageWombatPool, getAvailableWombat, extractPoolCSV } = require('./wombat.utils');
-const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
-const { truncateUnifiedFiles } = require('../data.interface/unified.truncator');
+const { computeLiquidityForSlippageWombatPool, extractPoolCSV } = require('./wombat.utils');
 const { fnName, readLastLine } = require('../utils/utils');
-
-const BN_1e18 = new BigNumber(10).pow(18);
-// generateUnifiedFileWombat();
-
-async function generateUnifiedFileWombat() {
-  const available = getAvailableWombat();
-
-  if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'wombat'))) {
-    fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'wombat'), { recursive: true });
-  }
-
-  const blockLastYear = await getBlocknumberForTimestamp(Math.round(Date.now() / 1000) - 365 * 24 * 60 * 60);
-  for (const poolName of Object.keys(available)) {
-    for (const base of Object.keys(available[poolName])) {
-      for (const quote of available[poolName][base]) {
-        await createUnifiedFileForPairWombat(blockLastYear, base, quote, poolName);
-      }
-    }
-  }
-
-  truncateUnifiedFiles('wombat', blockLastYear);
-}
+const { BN_1e18 } = require('./wombat.unified.generator');
 
 async function createUnifiedFileForPairWombat(blockLastYear, fromSymbol, toSymbol, poolName) {
   const coreV2 = new CoreV2();
@@ -108,5 +84,3 @@ async function createUnifiedFileForPairWombat(blockLastYear, fromSymbol, toSymbo
     fs.appendFileSync(unifiedFullFilename, `${line.blocknumber},${price},${JSON.stringify(slippageMap)}\n`);
   }
 }
-
-module.exports = { generateUnifiedFileWombat, createUnifiedFileForPairWombat };

@@ -10,6 +10,7 @@ const { getTokenSymbolByAddress } = require('../utils/token.utils');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
 const { wombatAbis } = require('../utils/abis');
 const { findValidBlockTag, readWombatPoolStartBlock, updateWombatPoolConfig } = require('./wombat.utils');
+const { generateUnifiedFileWombat } = require('./wombat.unified.generator');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
@@ -28,13 +29,15 @@ async function WombatHistoryFetcher() {
   const promises = [];
   for (const pool of wombatPools) {
     const promise = fetchHistoryForPool(pool, multicallProvider, web3Provider);
-    // await promise(); // uncomment to exec sequentially
+    // await promise(); // uncomment to exec sequentially, better for debug
     promises.push(promise);
 
     await sleep(2000);
   }
 
   await Promise.all(promises);
+
+  await generateUnifiedFileWombat();
 }
 async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   const poolContract = new Contract(pool.poolAddress, pool.poolAbi, multicallProvider);
@@ -65,7 +68,7 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
     if (startBlock < creationBlock) {
       startBlock = creationBlock + 800_000; // 2 weeks after pool creation
     }
-  
+
     // find the min block where the archive node call works
     let findBlock = readWombatPoolStartBlock(pool.poolAddress);
     if (!findBlock) {
@@ -77,7 +80,6 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
       startBlock = findBlock;
     }
     updateWombatPoolConfig(pool.poolAddress, startBlock);
-
   }
 
   ///if file does not exist, create it and write headers

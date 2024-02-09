@@ -38,6 +38,14 @@ class CoreV2 {
     return new BigNumber(wad).dividedBy(new BigNumber(10).pow(18));
   }
 
+  _HighCovRatioFeePoolV2QuoteFromSafe(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio) {
+    try {
+      return this._HighCovRatioFeePoolV2QuoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio);
+    } catch (e) {
+      return { actualToAmount: new BigNumber(0), haircut: new BigNumber(0) };
+    }
+  }
+
   _HighCovRatioFeePoolV2QuoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate, startCovRatio, endCovRatio) {
     let { actualToAmount, haircut } = this._quoteFrom(Ax, Ay, Lx, Ly, Dx, A, haircutRate);
     Ax = new BigNumber(Ax);

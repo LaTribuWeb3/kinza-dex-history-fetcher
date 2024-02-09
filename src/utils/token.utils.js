@@ -8,6 +8,8 @@ const { tokens } = require('../global.config');
  * @returns {number} normalized number for the decimals in inputs
  */
 function normalize(amount, decimals) {
+  // drop . and take integer part if any
+  amount = amount.toString().split('.')[0];
   if (decimals === 18) {
     return Number(utils.formatEther(amount));
   } else if (decimals > 18) {
