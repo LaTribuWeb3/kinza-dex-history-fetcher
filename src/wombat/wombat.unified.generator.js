@@ -5,7 +5,12 @@ const path = require('path');
 const CoreV2 = require('./wombat.core.v2');
 const { default: BigNumber } = require('bignumber.js');
 const { normalize } = require('../utils/token.utils');
-const { computeLiquidityForSlippageWombatPool, getAvailableWombat, extractPoolCSV } = require('./wombat.utils');
+const {
+  computeLiquidityForSlippageWombatPool,
+  getAvailableWombat,
+  extractPoolCSV,
+  computeLiquidityForAvgSlippageWombatPool
+} = require('./wombat.utils');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { truncateUnifiedFiles } = require('../data.interface/unified.truncator');
 const { fnName, readLastLine } = require('../utils/utils');
@@ -85,10 +90,11 @@ async function createUnifiedFileForPairWombat(blockLastYear, fromSymbol, toSymbo
     const price = normalize(qtyToResp.actualToAmount.toString(), 18);
     // computing the slippage map
     const slippageMap = {};
+    let lastAmount = oneToken0;
     for (let slippageBps = 50; slippageBps <= 2000; slippageBps += 50) {
       const targetPrice = price - (price * slippageBps) / 10000;
-      const liquidityObj = computeLiquidityForSlippageWombatPool(
-        BN_1e18,
+      const liquidityObj = computeLiquidityForAvgSlippageWombatPool(
+        lastAmount,
         targetPrice,
         Ax,
         Ay,
@@ -99,6 +105,7 @@ async function createUnifiedFileForPairWombat(blockLastYear, fromSymbol, toSymbo
         endCovRatio,
         haircutRate
       );
+      lastAmount = liquidityObj.base;
       const liquidityAtSlippage = normalize(liquidityObj.base.toString(10), 18);
       const quoteObtainedAtSlippage = normalize(liquidityObj.quote.toString(10), 18);
       slippageMap[slippageBps] = { base: liquidityAtSlippage, quote: quoteObtainedAtSlippage };

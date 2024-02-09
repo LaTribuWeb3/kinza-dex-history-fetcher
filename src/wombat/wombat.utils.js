@@ -153,7 +153,7 @@ function computeLiquidityForSlippageWombatPool(
   let lowTo = undefined;
   let highTo = undefined;
   let qtyFrom = baseQty.times(2);
-  const exitBoundsDiff = 1 / 100; // exit binary search when low and high bound have less than this amount difference
+  const exitBoundsDiff = 0.1 / 100; // exit binary search when low and high bound have less than this amount difference
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const qtyToResp = coreV2._HighCovRatioFeePoolV2QuoteFromSafe(
@@ -190,6 +190,126 @@ function computeLiquidityForSlippageWombatPool(
       const newQtyTo = newQtyToResp.actualToAmount;
       const normalizedFrom = 1;
       const normalizedTo = normalize(newQtyTo.toString(10), 18);
+      const currentPrice = normalizedTo / normalizedFrom;
+      const variation = Number(high) / Number(low) - 1;
+      // console.log(
+      //   `Qty: [${low ? normalize(low.toString(10), 18) : '0'} <-> ${
+      //     high ? normalize(high.toString(10), 18) : '+∞'
+      //   }]. Current price: 1 X = ${currentPrice} Y, targetPrice: ${targetPrice}. Try qty: ${normalizedFrom} X = ${normalizedTo} Y. variation: ${
+      //     variation * 100
+      //   }%`
+      // );
+
+      if (low && high) {
+        if (variation < exitBoundsDiff) {
+          const base = high.plus(low).div(2);
+          const quote = highTo.plus(lowTo).div(2);
+          return { base, quote };
+        }
+      }
+
+      if (currentPrice > targetPrice) {
+        // current price too high, must increase qtyFrom
+        low = qtyFrom;
+        lowTo = qtyTo;
+
+        if (!high) {
+          // if high is undefined, just double next try qty
+          qtyFrom = qtyFrom.times(2);
+        } else {
+          // qtyFrom = qtyFrom + (high - low) / 2n;
+          qtyFrom = qtyFrom.plus(high.minus(low).div(2));
+        }
+      } else {
+        // current price too low, must decrease qtyFrom
+        high = qtyFrom;
+        highTo = qtyTo;
+
+        if (!low) {
+          // if low is undefined, next try qty = qty / 2
+          // qtyFrom = qtyFrom / 2n;
+          qtyFrom = qtyFrom.div(2);
+        } else {
+          qtyFrom = qtyFrom.minus(high.minus(low).div(2));
+        }
+      }
+    } else {
+      // if qtyTo is 0, wombat returned an error meaning qtyFrom was too high
+      high = qtyFrom;
+      // qtyFrom = new BigNumber(1).pow(18);
+      if (!low) {
+        // if low is undefined, next try qty = qty / 2
+        // qtyFrom = qtyFrom / 2n;
+        qtyFrom = qtyFrom.div(2);
+      } else {
+        qtyFrom = qtyFrom.minus(high.minus(low).div(2));
+      }
+    }
+  }
+}
+
+/**
+ *
+ * @param {BigNumber} baseQty
+ * @param {number} targetPrice
+ * @param {BigNumber} Ax cash from
+ * @param {BigNumber} Ay cash to
+ * @param {BigNumber} Lx liability from
+ * @param {BigNumber} Ly liability to
+ * @param {BigNumber} amplificationFactor
+ * @param {BigNumber} startCovRatio
+ * @param {BigNumber} endCovRatio
+ * @param {BigNumber} haircurRate
+ * @returns
+ */
+function computeLiquidityForAvgSlippageWombatPool(
+  baseQty,
+  targetPrice,
+  Ax,
+  Ay,
+  Lx,
+  Ly,
+  amplificationFactor,
+  startCovRatio,
+  endCovRatio,
+  haircutRate
+) {
+  const coreV2 = new CoreV2();
+
+  Ax = new BigNumber(Ax);
+  Ay = new BigNumber(Ay);
+  Lx = new BigNumber(Lx);
+  Ly = new BigNumber(Ly);
+  baseQty = new BigNumber(baseQty);
+  amplificationFactor = new BigNumber(amplificationFactor);
+  haircutRate = new BigNumber(haircutRate);
+  startCovRatio = new BigNumber(startCovRatio);
+  endCovRatio = new BigNumber(endCovRatio);
+
+  let low = undefined;
+  let high = undefined;
+  let lowTo = undefined;
+  let highTo = undefined;
+  let qtyFrom = baseQty.times(2);
+  const exitBoundsDiff = 0.1 / 100; // exit binary search when low and high bound have less than this amount difference
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const qtyToResp = coreV2._HighCovRatioFeePoolV2QuoteFromSafe(
+      Ax,
+      Ay,
+      Lx,
+      Ly,
+      qtyFrom,
+      amplificationFactor,
+      haircutRate,
+      startCovRatio,
+      endCovRatio
+    );
+
+    if (qtyToResp.actualToAmount.gt(0)) {
+      const qtyTo = qtyToResp.actualToAmount;
+      const normalizedFrom = normalize(qtyFrom.toString(10), 18);
+      const normalizedTo = normalize(qtyTo.toString(10), 18);
       const currentPrice = normalizedTo / normalizedFrom;
       const variation = Number(high) / Number(low) - 1;
       // console.log(
@@ -328,5 +448,6 @@ module.exports = {
   readWombatPoolStartBlock,
   updateWombatPoolConfig,
   getAvailableWombat,
-  extractPoolCSV
+  extractPoolCSV,
+  computeLiquidityForAvgSlippageWombatPool
 };
