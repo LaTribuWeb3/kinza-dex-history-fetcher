@@ -146,7 +146,8 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
 
 // ignore a number of pool because they are empty and are taking a lot of time to fetch FOR NOTHING
 function ignorePool(token0, token1) {
-  if (token0 == 'HAY' || token1 == 'HAY') {
+  const tokensToIgnore = ['HAY', 'SnBNB'];
+  if (tokensToIgnore.includes(token0) || tokensToIgnore.includes(token1)) {
     return true;
   }
 

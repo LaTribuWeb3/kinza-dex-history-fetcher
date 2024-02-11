@@ -14,7 +14,7 @@ const { generateUnifiedFileWombat } = require('./wombat.unified.generator');
 dotenv.config();
 
 const RPC_URL = process.env.WOMBAT_RPC_URL;
-// WombatHistoryFetcher();
+// wombatHistoryFetcher();
 
 async function wombatHistoryFetcher() {
   //check data dir exists
