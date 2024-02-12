@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -191,6 +192,29 @@ function arrayAverage(array) {
   return array.reduce((a, b) => a + b, 0) / array.length;
 }
 
+function purgeEmptyCSVs(directory) {
+  console.log(`Checking directory: ${directory}`);
+  const entities = fs.readdirSync(directory, { withFileTypes: true });
+
+  entities.forEach((entity) => {
+    const fullPath = path.join(directory, entity.name);
+    if (entity.isDirectory()) {
+      purgeEmptyCSVs(fullPath); // Recursively purge subdirectories
+    } else if (entity.isFile() && path.extname(entity.name) === '.csv') {
+      console.log(`Examining file: ${fullPath}`);
+      const content = fs.readFileSync(fullPath, 'utf8');
+      const lines = content
+        .trim()
+        .split('\n')
+        .filter((line) => line.trim() !== '');
+      if (lines.length <= 1) {
+        fs.unlinkSync(fullPath);
+        console.log(`Deleted: ${fullPath}`);
+      }
+    }
+  });
+}
+
 module.exports = {
   retry,
   sleep,
@@ -201,5 +225,6 @@ module.exports = {
   logFnDurationWithLabel,
   readLastLine,
   arrayAverage,
-  retrySync
+  retrySync,
+  purgeEmptyCSVs
 };

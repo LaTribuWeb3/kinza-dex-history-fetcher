@@ -1,6 +1,14 @@
 const { RecordMonitoring } = require('../utils/monitoring');
 const { ethers } = require('ethers');
-const { fnName, roundTo, sleep, logFnDurationWithLabel, logFnDuration, retry } = require('../utils/utils');
+const {
+  fnName,
+  roundTo,
+  sleep,
+  logFnDurationWithLabel,
+  logFnDuration,
+  retry,
+  purgeEmptyCSVs
+} = require('../utils/utils');
 const { DATA_DIR, PLATFORMS } = require('../utils/constants');
 
 const fs = require('fs');
@@ -12,7 +20,6 @@ const { median } = require('simple-statistics');
 const { watchedPairs } = require('../global.config');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
 const { getPrices } = require('../data.interface/internal/data.interface.price');
-const { default: axios } = require('axios');
 
 const RUN_EVERY_MINUTES = 6 * 60; // in minutes
 const MONITORING_NAME = 'Dashboard Precomputer';
@@ -21,7 +28,6 @@ const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 const NB_DAYS = 180;
 const TARGET_DATA_POINTS = NB_DAYS;
 const NB_DAYS_AVG = 30;
-const BLOCKINFO_URL = process.env.BLOCKINFO_URL;
 
 const BIGGEST_DAILY_CHANGE_OVER_DAYS = 90; // amount of days to compute the biggest daily change
 let BLOCK_PER_DAY = 0; // 7127
@@ -41,6 +47,8 @@ async function PrecomputeDashboardData() {
         lastStart: Math.round(runStartDate / 1000),
         runEvery: RUN_EVERY_MINUTES * 60
       });
+
+      purgeEmptyCSVs(DATA_DIR);
 
       const currentBlock = (await web3Provider.getBlockNumber()) - 100;
 
@@ -115,6 +123,7 @@ async function PrecomputeDashboardData() {
       for (const pair of pairsToCompute) {
         await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
         console.log(`${fnName()}: precomputing for pair ${pair.base}/${pair.quote}`);
+        console.log(`${fnName()}: pair ${pairsToCompute.findIndex((_) => _ === pair) + 1}/${pairsToCompute.length}`);
         for (const platform of PLATFORMS) {
           console.log(`${fnName()}[${pair.base}/${pair.quote}]: precomputing for platform ${platform}`);
           // get the liquidity since startBlock - avgStep because, for the first block (= startBlock), we will compute the avg liquidity and volatility also
