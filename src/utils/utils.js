@@ -201,7 +201,6 @@ function purgeEmptyCSVs(directory) {
     if (entity.isDirectory()) {
       purgeEmptyCSVs(fullPath); // Recursively purge subdirectories
     } else if (entity.isFile() && path.extname(entity.name) === '.csv') {
-      console.log(`Examining file: ${fullPath}`);
       const content = fs.readFileSync(fullPath, 'utf8');
       const lines = content
         .trim()
