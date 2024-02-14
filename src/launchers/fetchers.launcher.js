@@ -13,10 +13,10 @@ const RUN_EVERY_MINUTES = 60;
 
 const fetchersToStart = [
   pancakeHistoryFetcher,
-    // pancakeswapV2HistoryFetcher,
-    // pancakeswapV3HistoryFetcher,
-    // pancakeswapV3PriceHistoryFetcher,
-    // PrecomputeMedianPrices,
+    pancakeswapV2HistoryFetcher,
+    pancakeswapV3HistoryFetcher,
+    pancakeswapV3PriceHistoryFetcher,
+    PrecomputeMedianPrices,
 ];
 
 async function LaunchFetchers() {
