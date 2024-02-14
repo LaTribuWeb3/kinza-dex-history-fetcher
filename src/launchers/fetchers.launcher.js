@@ -12,7 +12,7 @@ const { pancakeHistoryFetcher } = require('../pancake.stable/pancake.history.fet
 const RUN_EVERY_MINUTES = 60;
 
 const fetchersToStart = [
-  pancakeHistoryFetcher,
+    pancakeHistoryFetcher,
     pancakeswapV2HistoryFetcher,
     pancakeswapV3HistoryFetcher,
     pancakeswapV3PriceHistoryFetcher,
