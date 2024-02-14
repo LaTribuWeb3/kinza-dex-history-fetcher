@@ -1,17 +1,17 @@
 const path = require('path');
 const fs = require('fs');
 const { fnName, readLastLine } = require('../utils/utils');
-const { getAvailableCurve, getCurveDataforBlockInterval, computePriceAndSlippageMapForReserveValue, computePriceAndSlippageMapForReserveValueCryptoV2 } = require('./curve.utils');
+const { getAvailablepancake, getpancakeDataforBlockInterval, computePriceAndSlippageMapForReserveValue, computePriceAndSlippageMapForReserveValueCryptoV2 } = require('./pancake.utils');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { DATA_DIR } = require('../utils/constants');
 const { getConfTokenBySymbol } = require('../utils/token.utils');
 
 // this can be very long if done from the begining. 
-async function generateUnifiedFileCurve(endBlock) {
-    const available = getAvailableCurve(DATA_DIR);
+async function generateUnifiedFilepancake(endBlock) {
+    const available = getAvailablepancake(DATA_DIR);
 
-    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'curve'))) {
-        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'curve'), {recursive: true});
+    if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'pancake'))) {
+        fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'pancake'), {recursive: true});
     }
 
     for(const base of Object.keys(available)) {
@@ -26,7 +26,7 @@ async function generateUnifiedFileCurve(endBlock) {
 async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol, poolName) {
     console.log(`${fnName()}: create/append for ${fromSymbol} ${toSymbol} for pools ${poolName}`);
     const unifiedFilename = `${fromSymbol}-${toSymbol}-${poolName}-unified-data.csv`;
-    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'curve', unifiedFilename);
+    const unifiedFullFilename = path.join(DATA_DIR, 'precomputed', 'pancake', unifiedFilename);
     let sinceBlock = 0;
     let toWrite = [];
     if(!fs.existsSync(unifiedFullFilename)) {
@@ -46,7 +46,7 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol, poolName
     }
 
     console.log(`${fnName()}: getting data since ${sinceBlock} to ${endBlock}`);
-    const poolData = getCurveDataforBlockInterval(DATA_DIR, poolName, sinceBlock, endBlock);
+    const poolData = getpancakeDataforBlockInterval(DATA_DIR, poolName, sinceBlock, endBlock);
     let lastSavedBlock = sinceBlock-1;
     for(const blockNumber of Object.keys(poolData.reserveValues)) {        
         const dataForBlock = poolData.reserveValues[blockNumber];
@@ -94,6 +94,6 @@ async function createUnifiedFileForPair(endBlock, fromSymbol, toSymbol, poolName
     }
 }
 
-// generateUnifiedFileCurve(19000000);
+// generateUnifiedFilepancake(19000000);
 
-module.exports = { generateUnifiedFileCurve, createUnifiedFileForPair };
+module.exports = { generateUnifiedFilepancake, createUnifiedFileForPair };

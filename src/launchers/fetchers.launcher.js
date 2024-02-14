@@ -7,14 +7,16 @@ const { UpdateSyncFile, SYNC_FILENAMES } = require('../utils/sync');
 const { pancakeswapV2HistoryFetcher } = require('../pancakeswap.v2/pancakeswap.v2.history.fetcher');
 const { pancakeswapV3HistoryFetcher } = require('../pancakeswap.v3/pancakeswap.v3.history.fetcher');
 const { pancakeswapV3PriceHistoryFetcher } = require('../pancakeswap.v3/pancakeswap.v3.price.history.fetcher');
+const { pancakeHistoryFetcher } = require('../pancake.stable/pancake.history.fetcher');
 
 const RUN_EVERY_MINUTES = 60;
 
 const fetchersToStart = [
-    pancakeswapV2HistoryFetcher,
-    pancakeswapV3HistoryFetcher,
-    pancakeswapV3PriceHistoryFetcher,
-    PrecomputeMedianPrices,
+  pancakeHistoryFetcher,
+    // pancakeswapV2HistoryFetcher,
+    // pancakeswapV3HistoryFetcher,
+    // pancakeswapV3PriceHistoryFetcher,
+    // PrecomputeMedianPrices,
 ];
 
 async function LaunchFetchers() {

@@ -2,13 +2,12 @@ const { ethers, Contract, BigNumber } = require('ethers');
 
 const fs = require('fs');
 const { normalize, getConfTokenBySymbol } = require('../utils/token.utils');
-const { tricryptoFactoryAbi } = require('./curve.config');
 const BIGINT_1e18 = (BigInt(10) ** BigInt(18));
 
-function getCurveDataforBlockInterval(dataDir, poolName, startBlock, endBlock) {
-    const filePath = getCurveDataFile(dataDir, poolName);
+function getpancakeDataforBlockInterval(dataDir, poolName, startBlock, endBlock) {
+    const filePath = getpancakeDataFile(dataDir, poolName);
     if(!filePath) {
-        throw new Error(`Could not find pool data in ${dataDir}/curve/${poolName} for curve`);
+        throw new Error(`Could not find pool data in ${dataDir}/pancake/${poolName} for pancake`);
     }
 
     // load the file in RAM
@@ -18,7 +17,7 @@ function getCurveDataforBlockInterval(dataDir, poolName, startBlock, endBlock) {
     // blocknumber,ampfactor,lp_supply_0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490,reserve_DAI_0x6B175474E89094C44Da98b954EedeAC495271d0F,reserve_USDC_0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48,reserve_USDT_0xdAC17F958D2ee523a2206206994597C13D831ec7
     const headersSplitted = fileContent[0].split(',');
     if(headersSplitted.includes('gamma')) {
-        return getCurveDataforBlockIntervalCryptoV2(fileContent, startBlock, endBlock);
+        return getpancakeDataforBlockIntervalCryptoV2(fileContent, startBlock, endBlock);
     } else {
         const dataContents = {
             isCryptoV2: false,
@@ -91,7 +90,7 @@ function getCurveDataforBlockInterval(dataDir, poolName, startBlock, endBlock) {
  * 
  * @param {string[]} fileContent 
  */
-function getCurveDataforBlockIntervalCryptoV2(fileContent, startBlock, endBlock) {
+function getpancakeDataforBlockIntervalCryptoV2(fileContent, startBlock, endBlock) {
     const headersSplitted = fileContent[0].split(',');
     const dataContents = {
         isCryptoV2: true,
@@ -175,8 +174,8 @@ function getCurveDataforBlockIntervalCryptoV2(fileContent, startBlock, endBlock)
     return dataContents;
 }
 
-function getCurveDataFile(dataDir, poolName) {
-    let path = `${dataDir}/curve/${poolName}_curve.csv`;
+function getpancakeDataFile(dataDir, poolName) {
+    let path = `${dataDir}/pancake/${poolName}_pancake.csv`;
 
     if(fs.existsSync(path)) {
         return path;
@@ -186,7 +185,7 @@ function getCurveDataFile(dataDir, poolName) {
 }
 
 /**
- * Find the liquidity for slippage using curve data
+ * Find the liquidity for slippage using pancake data
  * Use binary search to find the value
  * This is the new computing formula: find the amount to sell to bring the new price to the target
  * @param {BigInt} baseQty 
@@ -197,7 +196,7 @@ function getCurveDataFile(dataDir, poolName) {
  * @param {number} j 
  * @param {number} amplificationFactor
  */
-function v2_computeLiquidityForSlippageCurvePool(baseQty, targetPrice, baseReserves, i, j, amplificationFactor) {
+function v2_computeLiquidityForSlippagepancakePool(baseQty, targetPrice, baseReserves, i, j, amplificationFactor) {
     let low = undefined;
     let high = undefined;
     let lowTo = undefined;
@@ -216,7 +215,7 @@ function v2_computeLiquidityForSlippageCurvePool(baseQty, targetPrice, baseReser
         newReserves[i] += qtyFrom;
         newReserves[j] -= qtyTo;
 
-        // get the new price for 1e18 (the min value for curve pool)
+        // get the new price for 1e18 (the min value for pancake pool)
         const newQtyTo = get_return(i, j, BIGINT_1e18, newReserves, amplificationFactor);
         const normalizedFrom = normalize(BIGINT_1e18.toString(), 18);
         const normalizedTo = normalize(newQtyTo.toString(), 18);
@@ -260,7 +259,7 @@ function v2_computeLiquidityForSlippageCurvePool(baseQty, targetPrice, baseReser
 
 
 // this is the old function: avg slippage
-function computeLiquidityForSlippageCurvePool(baseQty, targetPrice, reserves, i, j, amplificationFactor) {
+function computeLiquidityForSlippagepancakePool(baseQty, targetPrice, reserves, i, j, amplificationFactor) {
     let low = undefined;
     let high = undefined;
     let qtyFrom = baseQty * 2n;
@@ -305,7 +304,7 @@ function computeLiquidityForSlippageCurvePool(baseQty, targetPrice, reserves, i,
 }
 
 
-function v2_computeLiquidityForSlippageCurvePoolCryptoV2(baseAmountPrice, baseQty, targetPrice, baseReserves, i, j, amplificationFactor, gamma, D, priceScale, precisions, decimalsFrom, decimalsTo) {
+function v2_computeLiquidityForSlippagepancakePoolCryptoV2(baseAmountPrice, baseQty, targetPrice, baseReserves, i, j, amplificationFactor, gamma, D, priceScale, precisions, decimalsFrom, decimalsTo) {
     let low = undefined;
     let high = undefined;
     let lowTo = undefined;
@@ -367,7 +366,7 @@ function v2_computeLiquidityForSlippageCurvePoolCryptoV2(baseAmountPrice, baseQt
 }
 
 // this is the old function: avg slippage
-function computeLiquidityForSlippageCurvePoolCryptoV2(baseQty, targetPrice, reserves, i, j, amplificationFactor, gamma, D, priceScale, precisions, decimalsFrom, decimalsTo) {
+function computeLiquidityForSlippagepancakePoolCryptoV2(baseQty, targetPrice, reserves, i, j, amplificationFactor, gamma, D, priceScale, precisions, decimalsFrom, decimalsTo) {
     let low = undefined;
     let high = undefined;
     let qtyFrom = baseQty * 2n;
@@ -411,7 +410,7 @@ function computeLiquidityForSlippageCurvePoolCryptoV2(baseQty, targetPrice, rese
     }
 }
 
-/* CURVE PRICE ALGORITHM FUNCTIONS */
+/* pancake PRICE ALGORITHM FUNCTIONS */
 
 /**
  * get the virtual price
@@ -519,7 +518,7 @@ function get_dy_v2(i, j, dx, reserves, N_COINS, A, gamma, D, price_scale, precis
 
     // xp: uint256[N_COINS] = empty(uint256[N_COINS])
     // for k in range(N_COINS):
-    // xp[k] = Curve(msg.sender).balances(k)
+    // xp[k] = pancake(msg.sender).balances(k)
     const xp = [];
     for(let k = 0; k < N_COINS; k++) {
         xp[k] = structuredClone(reserves[k]);
@@ -536,7 +535,7 @@ function get_dy_v2(i, j, dx, reserves, N_COINS, A, gamma, D, price_scale, precis
         xp[k+1] = xp[k+1] * price_scale[k] * precisions[k+1] / 10n**18n;
     }
 
-    // y: uint256 = Math(self.math).newton_y(A, gamma, xp, Curve(msg.sender).D(), j)
+    // y: uint256 = Math(self.math).newton_y(A, gamma, xp, pancake(msg.sender).D(), j)
     const y = get_newton_y(A, gamma, xp, D, j, N_COINS);
 
     // dy: uint256 = xp[j] - y - 1
@@ -711,8 +710,8 @@ function get_return(i, j, x, balances, A) {
     return get_y(i, j, x + balances[i], balances, BigInt(balances.length), BigInt(A));
 }
 
-function getAvailableCurve(dataDir) {
-    const summary = JSON.parse(fs.readFileSync(`${dataDir}/curve/curve_pools_summary.json`));
+function getAvailablepancake(dataDir) {
+    const summary = JSON.parse(fs.readFileSync(`${dataDir}/pancake/pancake_pools_summary.json`));
     const available = {};
     for (const poolName of Object.keys(summary)) {
         for (const [token, reserveValue] of Object.entries(summary[poolName])) {
@@ -763,7 +762,7 @@ function computePriceAndSlippageMapForReserveValue(fromSymbol, toSymbol, poolTok
     let lastAmount = BIGINT_1e18;
     for(let slippageBps = 50; slippageBps <= 2000; slippageBps += 50) {
         const targetPrice = price - (price * slippageBps / 10000);
-        const liquidityObj = v2_computeLiquidityForSlippageCurvePool(lastAmount, targetPrice, reservesNorm18Dec, indexFrom, indexTo, ampFactor);
+        const liquidityObj = v2_computeLiquidityForSlippagepancakePool(lastAmount, targetPrice, reservesNorm18Dec, indexFrom, indexTo, ampFactor);
         const liquidityAtSlippage = normalize(liquidityObj.base.toString(), 18);
         const quoteObtainedAtSlippage = normalize(liquidityObj.quote.toString(), 18);
         lastAmount = liquidityObj.base;
@@ -822,7 +821,7 @@ function computePriceAndSlippageMapForReserveValueCryptoV2(fromSymbol, toSymbol,
     let lastAmount = baseAmount;
     for(let slippageBps = 50; slippageBps <= 2000; slippageBps += 50) {
         const targetPrice = price - (price * slippageBps / 10000);
-        const liquidityObj = v2_computeLiquidityForSlippageCurvePoolCryptoV2(baseAmount, lastAmount, targetPrice, reserves, indexFrom, indexTo, ampFactor, gamma, D, priceScale, precisions, fromConf.decimals, toConf.decimals);
+        const liquidityObj = v2_computeLiquidityForSlippagepancakePoolCryptoV2(baseAmount, lastAmount, targetPrice, reserves, indexFrom, indexTo, ampFactor, gamma, D, priceScale, precisions, fromConf.decimals, toConf.decimals);
         const liquidityAtSlippage = normalize(liquidityObj.base.toString(), fromConf.decimals);
         const quoteObtainedAtSlippage = normalize(liquidityObj.quote.toString(), toConf.decimals);
         lastAmount = liquidityObj.base;
@@ -914,4 +913,4 @@ async function test_new_dy() {
 
 // test_new_dy();
 
-module.exports = { getAvailableCurve, getCurveDataforBlockInterval, computePriceAndSlippageMapForReserveValue, computePriceAndSlippageMapForReserveValueCryptoV2 };
+module.exports = { getAvailablepancake, getpancakeDataforBlockInterval, computePriceAndSlippageMapForReserveValue, computePriceAndSlippageMapForReserveValueCryptoV2 };

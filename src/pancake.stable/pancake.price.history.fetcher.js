@@ -1,7 +1,7 @@
 const { ethers, Contract } = require('ethers');
 const dotenv = require('dotenv');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
-const curveConfig = require('./curve.config');
+const pancakeConfig = require('./pancake.config');
 const fs = require('fs');
 const path = require('path');
 const { sleep, fnName, roundTo } = require('../utils/utils');
@@ -13,12 +13,12 @@ const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
 dotenv.config();
 const RPC_URL = process.env.RPC_URL;
 
-const runnerName = 'Curve Price Fetcher';
+const runnerName = 'pancake Price Fetcher';
 const runEverySec = 60 * 60;
 /**
  * the main entrypoint of the script, will run the fetch against all pool in the config
  */
-async function CurvePriceHistoryFetcher(onlyOnce = false) {
+async function pancakePriceHistoryFetcher(onlyOnce = false) {
     // eslint-disable-next-line no-constant-condition
     while(true) {
         const start = Date.now();
@@ -30,14 +30,14 @@ async function CurvePriceHistoryFetcher(onlyOnce = false) {
                 'runEvery': runEverySec
             });
 
-            if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve'))) {
-                fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve'), {recursive: true});
+            if(!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake'))) {
+                fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake'), {recursive: true});
             }
 
             const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 
             const currentBlock = await web3Provider.getBlockNumber() - 10;
-            for(const fetchConfig of curveConfig.curvePricePairs) {
+            for(const fetchConfig of pancakeConfig.pancakePricePairs) {
                 await FetchPriceHistory(fetchConfig, currentBlock, web3Provider);
             }
 
@@ -83,7 +83,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
     console.log(`[${fetchConfig.poolName}]: Start fetching history for pairs ${fetchConfig.pairs.map(_ => `${_.token0}-${_.token1}`).join(',')}`);
     let startBlock = 0; 
 
-    const lastFetchFileName = path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${fetchConfig.poolName}-lastfetch.json`);
+    const lastFetchFileName = path.join(DATA_DIR, 'precomputed', 'price', 'pancake', `${fetchConfig.poolName}-lastfetch.json`);
 
     if (fs.existsSync(lastFetchFileName)) {
         const lastFetchData = JSON.parse(fs.readFileSync(lastFetchFileName));
@@ -94,13 +94,13 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
         startBlock += 100_000; // leave 100k blocks ~2 weeks after pool creation because many pools starts with weird data
         // clear the CSV if any
         for(const pair of fetchConfig.pairs) {
-            fs.rmSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair.token0}-${pair.token1}-unified-data.csv`), {force: true});
-            fs.rmSync(path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair.token1}-${pair.token0}-unified-data.csv`), {force: true});
+            fs.rmSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake', `${pair.token0}-${pair.token1}-unified-data.csv`), {force: true});
+            fs.rmSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake', `${pair.token1}-${pair.token0}-unified-data.csv`), {force: true});
         }
     }
 
     // fetch all blocks where an event occured since startBlock
-    const curveContract = new Contract(fetchConfig.poolAddress, fetchConfig.abi, web3Provider);
+    const pancakeContract = new Contract(fetchConfig.poolAddress, fetchConfig.abi, web3Provider);
 
     let priceData = initPriceData(fetchConfig);
     
@@ -111,7 +111,7 @@ async function FetchPriceHistory(fetchConfig, currentBlock, web3Provider) {
         let toBlock = Math.min(currentBlock, fromBlock + blockStep - 1);
         
         try {
-            const events = await curveContract.queryFilter('TokenExchange', fromBlock, toBlock);
+            const events = await pancakeContract.queryFilter('TokenExchange', fromBlock, toBlock);
 
             console.log(`${fnName()}[${fetchConfig.poolName}]: [${fromBlock} - ${toBlock}] found ${events.length} events (fetched ${toBlock-fromBlock+1} blocks)`);
 
@@ -205,7 +205,7 @@ function initPriceData(fetchConfig) {
 function savePriceData(priceData) {
     for (const pair of Object.keys(priceData)) {
         console.log(`saving data for pair ${pair}`);
-        const fileName = path.join(DATA_DIR, 'precomputed', 'price', 'curve', `${pair}-unified-data.csv`);
+        const fileName = path.join(DATA_DIR, 'precomputed', 'price', 'pancake', `${pair}-unified-data.csv`);
         if (!fs.existsSync(fileName)) {
             fs.writeFileSync(fileName, 'blocknumber,price\n');
         }
@@ -219,4 +219,4 @@ function savePriceData(priceData) {
     }
 }
 
-module.exports = { CurvePriceHistoryFetcher };
+module.exports = { pancakePriceHistoryFetcher };
