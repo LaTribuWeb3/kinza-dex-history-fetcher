@@ -275,8 +275,8 @@ async function FetchHistory(fetchConfig, currentBlock, web3Provider) {
     } else {
         // by default, fetch for the last 380 days (a bit more than 1 year)
         // const creationBlock = GetContractCreationBlockNumber(fetchConfig.poolAddress, web3Provider);
-        const startDate = Math.round(Date.now()/1000) - 182 * 24 * 60 * 60;
-        const startBlock = await getBlocknumberForTimestamp(startDate);
+        const startDate = Math.round(Date.now()/1000) - 323 * 24 * 60 * 60;
+        startBlock = await getBlocknumberForTimestamp(startDate);
         // startBlock = oneYearAgo > creationBlock ? oneYearAgo : creationBlock;
     }
 
@@ -288,9 +288,11 @@ async function FetchHistory(fetchConfig, currentBlock, web3Provider) {
 
     // fetch all blocks where an event occured since startBlock
     const pancakeContract = getpancakeContract(fetchConfig, web3Provider);
-    const topics = getpancakeTopics(pancakeContract, fetchConfig);
+    const topics = getpancakeTopics(pancakeContract, fetchConfig);    
 
-
+    if(startBlock + 1000000 > currentBlock) {
+        currentBlock = startBlock + 1000000;
+    }
     const allBlocksWithEvents = await getAllBlocksWithEventsForContractAndTopics(fetchConfig, startBlock, currentBlock, pancakeContract, topics);
     console.log(`[${fetchConfig.poolName}]: found ${allBlocksWithEvents.length} blocks with events since ${startBlock}`);
     

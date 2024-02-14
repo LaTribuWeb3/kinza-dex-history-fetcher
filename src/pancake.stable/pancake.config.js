@@ -33,23 +33,23 @@ const pancakePairs = [
             },
         ]
     },
-    // {
-    //     poolAddress: '0x3EFebC418efB585248A0D2140cfb87aFcc2C63DD',
-    //     poolName: 'USDT-USDC-PancakeSwap',
-    //     lpTokenAddress: '0xee1bcc9F1692E81A281b3a302a4b67890BA4be76',
-    //     lpTokenName: 'USDT-USDC-PancakeStableSwapLP',
-    //     abi: 'pancakeStableSwapTwoPoolAbi',
-    //     tokens: [
-    //         {
-    //             symbol: 'USDT',
-    //             address: '0x55d398326f99059fF775485246999027B3197955',
-    //         },
-    //         {
-    //             symbol: 'USDC',
-    //             address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
-    //         }
-    //     ]
-    // }
+    {
+        poolAddress: '0x3EFebC418efB585248A0D2140cfb87aFcc2C63DD',
+        poolName: 'USDT-USDC-PancakeSwap',
+        lpTokenAddress: '0xee1bcc9F1692E81A281b3a302a4b67890BA4be76',
+        lpTokenName: 'USDT-USDC-PancakeStableSwapLP',
+        abi: 'pancakeStableSwapTwoPoolAbi',
+        tokens: [
+            {
+                symbol: 'USDT',
+                address: '0x55d398326f99059fF775485246999027B3197955',
+            },
+            {
+                symbol: 'USDC',
+                address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+            }
+        ]
+    }
 ]
 
 // const pancakePricePairs = [
