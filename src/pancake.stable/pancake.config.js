@@ -53,27 +53,27 @@ const pancakePairs = [
 ]
 
 const pancakePricePairs = [
-    // {
-    //     poolAddress: "0xb1Da7D2C257c5700612BdE35C8d7187dc80d79f1",
-    //     poolName: 'HAY-USDT-PancakeSwap',
-    //     abi: pancakeStableSwapTwoPoolAbi,
-    //     tokens: [
-    //         {
-    //             symbol: 'HAY',
-    //             address: '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5',
-    //         },
-    //         {
-    //             symbol: 'USDT',
-    //             address: '0x55d398326f99059fF775485246999027B3197955',
-    //         },
-    //     ],
-    //     pairs: [
-    //         {
-    //             token0: 'HAY',
-    //             token1: 'USDT'
-    //         },
-    //     ]
-    // },
+    {
+        poolAddress: "0xb1Da7D2C257c5700612BdE35C8d7187dc80d79f1",
+        poolName: 'HAY-USDT-PancakeSwap',
+        abi: pancakeStableSwapTwoPoolAbi,
+        tokens: [
+            {
+                symbol: 'HAY',
+                address: '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5',
+            },
+            {
+                symbol: 'USDT',
+                address: '0x55d398326f99059fF775485246999027B3197955',
+            },
+        ],
+        pairs: [
+            {
+                token0: 'HAY',
+                token1: 'USDT'
+            },
+        ]
+    },
     {
         poolAddress: "0x3EFebC418efB585248A0D2140cfb87aFcc2C63DD",
         poolName: 'USDT-USDC-PancakeSwap',
