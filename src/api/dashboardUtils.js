@@ -19,7 +19,7 @@ function getAvailableForDashboard(platform) {
   
   let availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes(platform));
   if(platform === 'pancake'){
-    availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakev2') && !_.includes('pancakev3'));
+    availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakeswapv2') && !_.includes('pancakeswapv3'));
   }
 
   const results = [];
