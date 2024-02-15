@@ -29,7 +29,7 @@ let BLOCK_PER_DAY = 0; // 7127
 async function PrecomputeDashboardData() {
 // eslint-disable-next-line no-constant-condition
     while(true) {
-        await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
+        // await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
         const runStartDate = Date.now();
         console.log({TARGET_DATA_POINTS});
         console.log({NB_DAYS});
@@ -110,7 +110,7 @@ async function PrecomputeDashboardData() {
             console.log(`Will compute data for ${pairsToCompute.length} pairs`);
 
             for(const pair of pairsToCompute) {
-                await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
+                // await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
                 console.log(`${fnName()}: precomputing for pair ${pair.base}/${pair.quote}`);
                 for(const platform of PLATFORMS) {
                     console.log(`${fnName()}[${pair.base}/${pair.quote}]: precomputing for platform ${platform}`);

@@ -8,11 +8,13 @@ const { pancakeswapV2HistoryFetcher } = require('../pancakeswap.v2/pancakeswap.v
 const { pancakeswapV3HistoryFetcher } = require('../pancakeswap.v3/pancakeswap.v3.history.fetcher');
 const { pancakeswapV3PriceHistoryFetcher } = require('../pancakeswap.v3/pancakeswap.v3.price.history.fetcher');
 const { pancakeHistoryFetcher } = require('../pancake.stable/pancake.history.fetcher');
+const { pancakePriceHistoryFetcher } = require('../pancake.stable/pancake.price.history.fetcher');
 
 const RUN_EVERY_MINUTES = 60;
 
 const fetchersToStart = [
     pancakeHistoryFetcher,
+    pancakePriceHistoryFetcher,
     pancakeswapV2HistoryFetcher,
     pancakeswapV3HistoryFetcher,
     pancakeswapV3PriceHistoryFetcher,
