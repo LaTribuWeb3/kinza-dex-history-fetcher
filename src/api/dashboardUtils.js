@@ -16,7 +16,11 @@ function getFetcherResults() {
   return fetcherResults;
 }
 function getAvailableForDashboard(platform) {
-  const availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes(platform));
+  
+  let availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes(platform));
+  if(platform === 'pancake'){
+    availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakev2') && !_.includes('pancakev3'));
+  }
 
   const results = [];
   for (const file of availableFiles) {
