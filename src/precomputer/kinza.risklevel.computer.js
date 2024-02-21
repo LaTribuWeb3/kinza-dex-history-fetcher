@@ -8,9 +8,11 @@ const { protocolDataProviderAddress } = require('./kinza.risklevel.computer.conf
 const { protocolDataProviderABI } = require('./kinza.risklevel.computer.config');
 const { getLiquidity, getVolatility, getRollingVolatility, getLiquidityAll } = require('../data.interface/data.interface');
 const path = require('path');
-const { SPANS, PLATFORMS, DATA_DIR, TARGET_SLIPPAGES } = require('../utils/constants');
+const { SPANS, PLATFORMS, DATA_DIR, TARGET_SLIPPAGES, BLOCK_PER_DAY } = require('../utils/constants');
 const fs = require('fs');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
+const { computeAverageSlippageMap } = require('../data.interface/internal/data.interface.liquidity');
+const { getConfTokenBySymbol } = require('../utils/token.utils');
 
 
 const RPC_URL = process.env.RPC_URL;
@@ -34,33 +36,23 @@ async function precomputeRiskLevelKinza() {
                 'runEvery': RUN_EVERY_MINUTES * 60
             });
 
-            const dirPath = path.join(DATA_DIR, 'precomputed', 'riskoracle');
+            const dirPath = path.join(DATA_DIR, 'precomputed', 'dashboard');
             if (!fs.existsSync(dirPath)) {
                 fs.mkdirSync(dirPath, { recursive: true });
             }
-
-            // const protocolDataProviderContract = new ethers.Contract(protocolDataProviderAddress, protocolDataProviderABI, web3Provider);
-
-            // const tokens = await protocolDataProviderContract.getAllReservesTokens();
+            
             const promises = [];
             for(const base of Object.keys(pairsToCompute)) {
-                for(const quote of pairsToCompute[base]) {
-                    const promise = computeDataForPair(base, quote);
-                    await promise;
-                    promises.push(promise);
-                }
+                const promise = computeDataForPair(base, pairsToCompute[base]);
+                await promise;
+                promises.push(promise);
             }
 
             const allPairs = await Promise.all(promises);
 
-            // let result = await Promise.all(
-            //     tokens.map(async (_) => {
-            //         const reserveCaps = await protocolDataProviderContract.getReserveCaps(_.tokenAddress);
-            //         return { symbol: _.symbol, tokenAddress: _.tokenAddress, borrowCap: reserveCaps.borrowCap.toString(), supplyCap: reserveCaps.supplyCap.toString() };
-            //     })
-            // );
-
-            console.log(JSON.stringify(allPairs, null, 2));
+            const stringified = JSON.stringify(allPairs, null, 2);
+            console.log(stringified);
+            fs.writeFileSync(path.join(dirPath, 'kinza-overview.json'), stringified);
         } catch (error) {
             console.error(error);
             const errorMsg = `An exception occurred: ${error}`;
@@ -90,9 +82,9 @@ async function precomputeRiskLevelKinza() {
 
 async function computeDataForPair(base, quotes) {
     // const subMarkets = await Promise.all(quotes.map(async (quote) => await computeSubMarket(base, quote)));
-    let subMarkets = [];
+    const subMarkets = [];
     for (let quote of quotes) {
-        let newSubMarket = await computeSubMarket(base, quote);
+        const newSubMarket = await computeSubMarket(base, quote);
         subMarkets.push(newSubMarket);
     }
     let totalRiskLevel = 0.0;
@@ -101,22 +93,22 @@ async function computeDataForPair(base, quotes) {
     }
     let data = {};
     data[base] = {
-        'riskLevel': totalRiskLevel / subMarkets.length,
-        'subMarkets': subMarkets
+        riskLevel: totalRiskLevel / subMarkets.length,
+        subMarkets: subMarkets
     };
     return data;
 }
 
 async function computeSubMarket(base, quote) {
+    console.log(`computeSubMarket[${base}/${quote}]: starting`);
+    const baseConf = getConfTokenBySymbol(base);
+    const quoteConf = getConfTokenBySymbol(quote);
+    const baseTokenAddress = baseConf.address;
+    const quoteTokenAddress = quoteConf.address;
     const protocolDataProviderContract = new ethers.Contract(protocolDataProviderAddress, protocolDataProviderABI, web3Provider);
 
-    const allTokens = await retry(protocolDataProviderContract.getAllReservesTokens, []);
-
-    const baseTokenAddress = allTokens.filter((_) => _.symbol == base)[0].tokenAddress;
-    const quoteTokenAddress = allTokens.filter((_) => _.symbol == quote)[0].tokenAddress;
-
-    const baseReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [baseTokenAddress]);
-    const quoteReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [quoteTokenAddress]);
+    const baseReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [baseConf.address]);
+    const quoteReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [quoteConf.address]);
     const reserveDataConfigurationQuote = await retry(protocolDataProviderContract.getReserveConfigurationData, [quoteTokenAddress]);
 
     const baseTokenInfo = await axios.get('https://coins.llama.fi/prices/current/bsc:' + baseTokenAddress + ',bsc:' + quoteTokenAddress);
@@ -125,29 +117,39 @@ async function computeSubMarket(base, quote) {
 
     let riskLevel = 0.0;
 
+    const liquidationBonusBps = reserveDataConfigurationQuote.liquidationBonus.toNumber() - 10000;
+    const borrowCap = baseReserveCaps.borrowCap.toNumber(); // already with the good amount of decimals, no need to normalize
+    const ltvBps = reserveDataConfigurationQuote.ltv.toNumber();
+
     const currentBlock = await web3Provider.getBlockNumber() - 10;
-    const blockNumberThirtyDaysAgo = currentBlock - 30 * 24 * 3600 / 3; // Current block minus 30 days
+    const blockNumberThirtyDaysAgo = currentBlock - (30 * BLOCK_PER_DAY); // Current block minus 30 days
     const fullLiquidity = getLiquidityAll(base, quote, blockNumberThirtyDaysAgo, currentBlock);
-    const averageLiquidityOn30Days = Object.entries(fullLiquidity)
-        .map((_) => _[1])
-        .map(liquidity => liquidity.price)
-        .reduce((acc, val) => { return acc + (val === undefined ? 0 : val); }, 0) / Object.entries(fullLiquidity).length;
+    const averageLiquidityOn30Days = computeAverageSlippageMap(fullLiquidity);
 
-    const volatility = await getRollingVolatility('all', base, quote, web3Provider); // take the last one
+    const volatility = await getRollingVolatility('all', base, quote, web3Provider);
 
-    if (volatility !== undefined)
-        riskLevel = findRiskLevelFromParameters(volatility[-1].latest.current, averageLiquidityOn30Days, reserveDataConfigurationQuote.liquidationBonus - 1, reserveDataConfigurationQuote.ltv);
+    if (!volatility) {
+        throw new Error(`Cannot find volatility for ${base}/${quote}`);
+    }
 
-    return {
-        'quote': quote,
-        'riskLevel': riskLevel,
-        'LTV': reserveDataConfigurationQuote.ltv.toNumber(),
-        'liquidationBonus': reserveDataConfigurationQuote.liquidationBonus - 1,
-        'supplyCapUsd': baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price * baseReserveCaps.supplyCap,
-        'supplyCapInKind': baseReserveCaps.supplyCap.toNumber(),
-        'borrowCapUsd': baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price * quoteReserveCaps.supplyCap,
-        'borrowCapInKind': quoteReserveCaps.borrowCap.toNumber()
+    const liquidity = averageLiquidityOn30Days.slippageMap[liquidationBonusBps].base;
+    const selectedVolatility = volatility.latest.current;
+    riskLevel = findRiskLevelFromParameters(selectedVolatility, liquidity, liquidationBonusBps / 10000, ltvBps / 10000, borrowCap);
+    const pairValue = {
+        quote: quote,
+        riskLevel: riskLevel,
+        LTV: ltvBps / 10000,
+        liquidationBonus: liquidationBonusBps / 10000,
+        supplyCapUsd: baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price * baseReserveCaps.supplyCap.toNumber(),
+        supplyCapInKind: baseReserveCaps.supplyCap.toNumber(),
+        borrowCapUsd: baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price * quoteReserveCaps.borrowCap.toNumber(),
+        borrowCapInKind: quoteReserveCaps.borrowCap.toNumber(),
+        volatility: selectedVolatility,
+        liquidity: liquidity,
     };
+
+    console.log(`computeSubMarket[${base}/${quote}]: result:`, pairValue);
+    return pairValue;
 }
 
 function findRiskLevelFromParameters(volatility /* de la pair */, liquidity /* from CSV file à 30 jours (from block to block) */, liquidationBonus, ltv, borrowCap) {
@@ -155,7 +157,6 @@ function findRiskLevelFromParameters(volatility /* de la pair */, liquidity /* f
     const d = borrowCap;
     const beta = liquidationBonus;
     const l = liquidity;
-    ltv = Number(ltv) / 100;
 
     const sigmaTimesSqrtOfD = sigma * Math.sqrt(d);
     const ltvPlusBeta = ltv + beta;

@@ -1,20 +1,7 @@
 const protocolDataProviderAddress = '0x09Ddc4AE826601b0F9671b9edffDf75e7E6f5D61';
 
 const pairsToCompute = {
-    'BUSD': [
-        'USDC',
-        'USDT',
-        'TUSD',
-        'BTCB',
-        'ETH',
-        'WBNB',
-        'wBETH',
-        'HAY', //  'lisUSD'
-        'slisBNB',
-        'FDUSD'
-    ],
     'USDC': [
-        'USDC',
         'USDT',
         'TUSD',
         'BTCB',
@@ -22,12 +9,11 @@ const pairsToCompute = {
         'WBNB',
         'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
+        // 'slisBNB',
         'FDUSD'
     ],
     'USDT': [
         'USDC',
-        'USDT'
     ],
     'TUSD': [
         'USDC',
@@ -37,12 +23,11 @@ const pairsToCompute = {
         'USDC',
         'USDT',
         'TUSD',
-        'BTCB',
         'ETH',
         'WBNB',
         'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
+        // 'slisBNB',
         'FDUSD'
     ],
     'ETH': [
@@ -50,11 +35,10 @@ const pairsToCompute = {
         'USDT',
         'TUSD',
         'BTCB',
-        'ETH',
         'WBNB',
         'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
+        // 'slisBNB',
         'FDUSD'
     ],
     'WBNB': [
@@ -63,10 +47,9 @@ const pairsToCompute = {
         'TUSD',
         'BTCB',
         'ETH',
-        'WBNB',
         'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
+        // 'slisBNB',
         'FDUSD'
     ],
     'wBETH': [
@@ -76,27 +59,26 @@ const pairsToCompute = {
         'BTCB',
         'ETH',
         'WBNB',
-        'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
+        // 'slisBNB',
         'FDUSD'
     ],
     'HAY': [ // lisUSD
         'USDC',
         'USDT'
     ],
-    'slisBNB': [
-        'USDC',
-        'USDT',
-        'TUSD',
-        'BTCB',
-        'ETH',
-        'WBNB',
-        'wBETH',
-        'HAY', //  'lisUSD'
-        'slisBNB',
-        'FDUSD'
-    ],
+    // 'slisBNB': [
+    //     'USDC',
+    //     'USDT',
+    //     'TUSD',
+    //     'BTCB',
+    //     'ETH',
+    //     'WBNB',
+    //     'wBETH',
+    //     'HAY', //  'lisUSD'
+    //     'slisBNB',
+    //     'FDUSD'
+    // ],
     'FDUSD': [
         'USDC',
         'USDT',
@@ -106,8 +88,7 @@ const pairsToCompute = {
         'WBNB',
         'wBETH',
         'HAY', //  'lisUSD'
-        'slisBNB',
-        'FDUSD'
+        // 'slisBNB',
     ]
 };
 

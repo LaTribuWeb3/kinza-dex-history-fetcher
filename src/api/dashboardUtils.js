@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { DATA_DIR, PLATFORMS } = require('../utils/constants');
 const dirPath = path.join(DATA_DIR, 'precomputed', 'dashboard');
+const overviewFile = path.join(dirPath, 'kinza-overview.json');
 
 function getFetcherResults() {
     const fetcherResults = [];
@@ -15,8 +16,17 @@ function getFetcherResults() {
 
     return fetcherResults;
 }
+
+function getKinzaOverview() {
+    if(!fs.existsSync(overviewFile)) {
+        throw new Error(`Cannot find ${overviewFile}`);
+    }
+    
+    return JSON.parse(fs.readFileSync(overviewFile, 'utf-8'));
+}
+
 function getAvailableForDashboard(platform) {
-    const availableFiles = fs.readdirSync(dirPath).filter(_ => _.endsWith('.json') && _.includes(platform));
+    const availableFiles = fs.readdirSync(path.join(dirPath, 'pairs')).filter(_ => _.endsWith('.json') && _.includes(platform));
 
     const results = [];
     for(const file of availableFiles) {
@@ -44,4 +54,4 @@ function checkPlatform(platform) {
     }
 }
 
-module.exports = { getAvailableForDashboard, getDataForPairAndPlatform, checkPlatform, getFetcherResults };
+module.exports = { getAvailableForDashboard, getDataForPairAndPlatform, checkPlatform, getFetcherResults, getKinzaOverview };
