@@ -83,7 +83,7 @@ async function precomputeRiskLevelKinza() {
 async function computeDataForPair(base, quotes) {
     // const subMarkets = await Promise.all(quotes.map(async (quote) => await computeSubMarket(base, quote)));
     let subMarkets = [];
-    for(let quote of quotes) {
+    for (let quote of quotes) {
         let newSubMarket = await computeSubMarket(base, quote);
         subMarkets.push(newSubMarket);
     }
@@ -117,19 +117,18 @@ async function computeSubMarket(base, quote) {
 
     let riskLevel = 0.0;
 
-    if (true) {
-        const currentBlock = await web3Provider.getBlockNumber() - 10;
-        const blockNumberThirtyDaysAgo = currentBlock - 30 * 24 * 3600 / 3; // Current block minus 30 days
-        const fullLiquidity = getLiquidityAll(base, quote, blockNumberThirtyDaysAgo, currentBlock);
-        const averageLiquidityOn30Days = Object.entries(fullLiquidity)
-            .map((_) => _[1])
-            .map(liquidity => liquidity.price)
-            .reduce((acc, val) => { return acc + (val === undefined ? 0 : val); }, 0) / Object.entries(fullLiquidity).length;
+    const currentBlock = await web3Provider.getBlockNumber() - 10;
+    const blockNumberThirtyDaysAgo = currentBlock - 30 * 24 * 3600 / 3; // Current block minus 30 days
+    const fullLiquidity = getLiquidityAll(base, quote, blockNumberThirtyDaysAgo, currentBlock);
+    const averageLiquidityOn30Days = Object.entries(fullLiquidity)
+        .map((_) => _[1])
+        .map(liquidity => liquidity.price)
+        .reduce((acc, val) => { return acc + (val === undefined ? 0 : val); }, 0) / Object.entries(fullLiquidity).length;
 
-        const volatility = await getRollingVolatility('all', base, quote, web3Provider); // take the last one
+    const volatility = await getRollingVolatility('all', base, quote, web3Provider); // take the last one
 
-        riskLevel = findRiskLevelFromParameters(volatility[-1], averageLiquidityOn30Days,  reserveDataConfigurationQuote.liquidationBonus - 1, reserveDataConfigurationQuote.ltv);
-    }
+    if (volatility !== undefined)
+        riskLevel = findRiskLevelFromParameters(volatility[-1].latest.current, averageLiquidityOn30Days, reserveDataConfigurationQuote.liquidationBonus - 1, reserveDataConfigurationQuote.ltv);
 
     return {
         'quote': quote,
