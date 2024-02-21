@@ -18,18 +18,25 @@ function getFetcherResults() {
 }
 
 function getKinzaOverview() {
-    if(!fs.existsSync(overviewFile)) {
-        throw new Error(`Cannot find ${overviewFile}`);
-    }
-    
-    return JSON.parse(fs.readFileSync(overviewFile, 'utf-8'));
+  if (!fs.existsSync(overviewFile)) {
+    throw new Error(`Cannot find ${overviewFile}`);
+  }
+
+  return JSON.parse(fs.readFileSync(overviewFile, 'utf-8'));
 }
 
 function getAvailableForDashboard(platform) {
-  const availableFiles = fs.readdirSync(path.join(dirPath, 'pairs')).filter(_ => _.endsWith('.json') && _.includes(platform));
-  
-  if(platform === 'pancake'){
-    availableFiles = fs.readdirSync(dirPath).filter((_) => _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakeswapv2') && !_.includes('pancakeswapv3'));
+  const availableFiles = fs
+    .readdirSync(path.join(dirPath, 'pairs'))
+    .filter((_) => _.endsWith('.json') && _.includes(platform));
+
+  if (platform === 'pancake') {
+    availableFiles = fs
+      .readdirSync(dirPath)
+      .filter(
+        (_) =>
+          _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakeswapv2') && !_.includes('pancakeswapv3')
+      );
   }
 
   const results = [];
@@ -58,4 +65,10 @@ function checkPlatform(platform) {
   }
 }
 
-module.exports = { getAvailableForDashboard, getDataForPairAndPlatform, checkPlatform, getFetcherResults, getKinzaOverview };
+module.exports = {
+  getAvailableForDashboard,
+  getDataForPairAndPlatform,
+  checkPlatform,
+  getFetcherResults,
+  getKinzaOverview
+};
