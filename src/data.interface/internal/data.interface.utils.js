@@ -306,7 +306,15 @@ function getUnifiedDataForInterval(
   alreadyUsedPools
 ) {
   if (platform == 'wombat' || platform == 'pancake') {
-    return getUnifiedDataForIntervalForWombatOrPancake(platform, fromSymbol, toSymbol, fromBlock, toBlock, stepBlock, alreadyUsedPools);
+    return getUnifiedDataForIntervalForWombatOrPancake(
+      platform,
+      fromSymbol,
+      toSymbol,
+      fromBlock,
+      toBlock,
+      stepBlock,
+      alreadyUsedPools
+    );
   }
 
   const filename = `${fromSymbol}-${toSymbol}-unified-data.csv`;
@@ -343,9 +351,9 @@ function getUnifiedDataForIntervalByFilename(fullFilename, fromBlock, toBlock, s
   // console.log(`${fnName()}: ${fullFilename} found! Extracting data since ${fromBlock} to ${toBlock}`);
 
   const fileContent = readDataFromFile(fullFilename);
-  if(fileContent.length <= 2) {
-      // console.log(`No data in file ${fullFilename}`);
-      return undefined;
+  if (fileContent.length <= 2) {
+    // console.log(`No data in file ${fullFilename}`);
+    return undefined;
   }
   const unifiedData = getBlankUnifiedData(fromBlock, toBlock, stepBlock);
   const blocksToFill = Object.keys(unifiedData).map((_) => Number(_));

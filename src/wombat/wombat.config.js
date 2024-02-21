@@ -917,12 +917,12 @@ const wombatPools = [
     ]
   },
   {
-    poolName: 'SmartHAYPool',
+    poolName: 'SmartlisUSDPool',
     poolAddress: '0x0520451B19AD0bb00eD35ef391086A692CFC74B2',
     poolAbi: HighCovRatioFeePoolV2Abi,
     tokens: [
       {
-        symbol: 'HAY'
+        symbol: 'lisUSD'
       },
       {
         symbol: 'USDC'
@@ -973,11 +973,11 @@ const wombatPricePairs = [
   },
   {
     poolAddress: '0x0520451B19AD0bb00eD35ef391086A692CFC74B2',
-    poolName: 'SmartHAYPool',
+    poolName: 'SmartlisUSDPool',
     abi: HighCovRatioFeePoolV2Abi,
     tokens: [
       {
-        symbol: 'HAY',
+        symbol: 'lisUSD',
         address: '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5',
         decimals: 18
       },
@@ -994,11 +994,11 @@ const wombatPricePairs = [
     ],
     pairs: [
       {
-        token0: 'HAY',
+        token0: 'lisUSD',
         token1: 'USDC'
       },
       {
-        token0: 'HAY',
+        token0: 'lisUSD',
         token1: 'USDT'
       }
     ]

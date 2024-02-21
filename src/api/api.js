@@ -33,13 +33,13 @@ app.get('/api/dashboard/overview', async (req, res, next) => {
 });
 
 app.get('/api/dashboard/kinza-overview', async (req, res, next) => {
-    try {
-        const kinzaOverview = getKinzaOverview();
-        res.json(kinzaOverview);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-        next();
-    }
+  try {
+    const kinzaOverview = getKinzaOverview();
+    res.json(kinzaOverview);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    next();
+  }
 });
 
 app.get('/api/dashboard/available/:platform', async (req, res, next) => {

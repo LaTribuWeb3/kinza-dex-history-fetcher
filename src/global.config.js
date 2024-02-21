@@ -49,12 +49,17 @@ const tokens = {
     address: '0xa2E3356610840701BDf5611a53974510Ae27E2e1',
     dustAmount: 0.01
   },
-  HAY: {
+  lisUSD: {
     decimals: 18,
     address: '0x0782b6d8c4551B9760e74c0545a9bCD90bdc41E5',
     dustAmount: 0.01
   },
   SnBNB: {
+    decimals: 18,
+    address: '0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B',
+    dustAmount: 0.001
+  },
+  slisBNB: {
     decimals: 18,
     address: '0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B',
     dustAmount: 0.001
@@ -99,7 +104,7 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: undefined,
       exportToInternalDashboard: true
     },
@@ -141,13 +146,18 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
     {
       quote: 'SnBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ],
@@ -178,13 +188,18 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
     {
       quote: 'SnBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ],
@@ -210,13 +225,18 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
     {
       quote: 'SnBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ],
@@ -237,13 +257,18 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
     {
       quote: 'SnBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ],
@@ -259,13 +284,18 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['USDT'],
       exportToInternalDashboard: true
     },
     {
       quote: 'SnBNB',
       pivots: ['USDT', 'WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ],
@@ -276,7 +306,7 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['USDT'],
       exportToInternalDashboard: true
     },
@@ -284,11 +314,16 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: ['USDT', 'WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
   wBETH: [
     {
-      quote: 'HAY',
+      quote: 'lisUSD',
       pivots: ['ETH'],
       exportToInternalDashboard: true
     },
@@ -296,17 +331,27 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
-  HAY: [
+  lisUSD: [
     {
       quote: 'SnBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ]
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'HAY', 'TUSD'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'TUSD'];
 
 module.exports = { tokens, watchedPairs, pairsToFetch };

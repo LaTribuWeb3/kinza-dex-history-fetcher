@@ -107,35 +107,35 @@ function computeAverageData(liquidityDataForInterval, fromBlock, toBlock) {
 
 /**
  * Compute average slippage map and price from a liquidity data
- * @param {{[blocknumber: number]: {price: number, slippageMap: {[slippageBps: number]: number}}}} liquidityData 
+ * @param {{[blocknumber: number]: {price: number, slippageMap: {[slippageBps: number]: number}}}} liquidityData
  * @returns {{price: number, slippageMap: {[slippageBps: number]: {base: number, quote: number}}}
  */
 function computeAverageSlippageMap(liquidityData) {
-    const avgSlippageMap = {
-        price: 0,
-        slippageMap: getDefaultSlippageMap(),
-    };
+  const avgSlippageMap = {
+    price: 0,
+    slippageMap: getDefaultSlippageMap()
+  };
 
-    // this is the number of data we will avg against
-    const blockNumbers = Object.keys(liquidityData);
+  // this is the number of data we will avg against
+  const blockNumbers = Object.keys(liquidityData);
 
-    // sum all values (price and liquidity for each slippage bps)
-    for(const block of blockNumbers) {
-        avgSlippageMap.price += liquidityData[block].price;
-        for(const slippageBps of Object.keys(avgSlippageMap.slippageMap)) {
-            avgSlippageMap.slippageMap[slippageBps].base += liquidityData[block].slippageMap[slippageBps].base;
-            avgSlippageMap.slippageMap[slippageBps].quote += liquidityData[block].slippageMap[slippageBps].quote;
-        }
+  // sum all values (price and liquidity for each slippage bps)
+  for (const block of blockNumbers) {
+    avgSlippageMap.price += liquidityData[block].price;
+    for (const slippageBps of Object.keys(avgSlippageMap.slippageMap)) {
+      avgSlippageMap.slippageMap[slippageBps].base += liquidityData[block].slippageMap[slippageBps].base;
+      avgSlippageMap.slippageMap[slippageBps].quote += liquidityData[block].slippageMap[slippageBps].quote;
     }
+  }
 
-    // divide by the number of values ==> blockNumbers.length
-    avgSlippageMap.price /= blockNumbers.length;
-    for(const slippageBps of Object.keys(avgSlippageMap.slippageMap)) {
-        avgSlippageMap.slippageMap[slippageBps].base /= blockNumbers.length;
-        avgSlippageMap.slippageMap[slippageBps].quote /= blockNumbers.length;
-    }
+  // divide by the number of values ==> blockNumbers.length
+  avgSlippageMap.price /= blockNumbers.length;
+  for (const slippageBps of Object.keys(avgSlippageMap.slippageMap)) {
+    avgSlippageMap.slippageMap[slippageBps].base /= blockNumbers.length;
+    avgSlippageMap.slippageMap[slippageBps].quote /= blockNumbers.length;
+  }
 
-    return avgSlippageMap;
+  return avgSlippageMap;
 }
 
 /**
@@ -523,4 +523,9 @@ function getSumSlippageMapAcrossDexes(fromSymbol, toSymbol, fromBlock, toBlock, 
   return { unifiedData: baseData, usedPools: alreadyUsedPools };
 }
 
-module.exports = { getAverageLiquidityForInterval, getSlippageMapForInterval, getLiquidityAccrossDexes, computeAverageSlippageMap};
+module.exports = {
+  getAverageLiquidityForInterval,
+  getSlippageMapForInterval,
+  getLiquidityAccrossDexes,
+  computeAverageSlippageMap
+};

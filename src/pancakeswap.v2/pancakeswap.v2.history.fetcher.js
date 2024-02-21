@@ -146,7 +146,7 @@ async function pancakeswapV2HistoryFetcher(onlyOnce = false) {
 
 // ignore a number of pool because they are empty and are taking a lot of time to fetch FOR NOTHING
 function ignorePool(token0, token1) {
-  const tokensToIgnore = ['HAY', 'SnBNB'];
+  const tokensToIgnore = ['lisUSD', 'SnBNB'];
   if (tokensToIgnore.includes(token0) || tokensToIgnore.includes(token1)) {
     return true;
   }
@@ -154,17 +154,17 @@ function ignorePool(token0, token1) {
   switch (`${token0}-${token1}`) {
     default:
       return false;
-    case 'HAY-BTCB':
+    case 'lisUSD-BTCB':
     case 'wBETH-WBNB':
     case 'BTCB-FDUSD':
     case 'WBNB-FDUSD':
     case 'SnBNB-WBNB':
     case 'USDT-FDUSD':
-    case 'HAY-USDC':
+    case 'lisUSD-USDC':
     case 'TUSD-WBNB':
     case 'ETH-wBETH':
     case 'TUSD-USDT':
-    case 'HAY-USDT':
+    case 'lisUSD-USDT':
     case 'SnBNB-USDT':
     case 'USDT-SnBNB':
       return true;
