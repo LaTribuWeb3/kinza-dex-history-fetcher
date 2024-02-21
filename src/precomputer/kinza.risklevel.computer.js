@@ -42,8 +42,16 @@ async function precomputeRiskLevelKinza() {
             // const protocolDataProviderContract = new ethers.Contract(protocolDataProviderAddress, protocolDataProviderABI, web3Provider);
 
             // const tokens = await protocolDataProviderContract.getAllReservesTokens();
+            const promises = [];
+            for(const base of Object.keys(pairsToCompute)) {
+                for(const quote of pairsToCompute[base]) {
+                    const promise = computeDataForPair(base, quote);
+                    await promise;
+                    promises.push(promise);
+                }
+            }
 
-            let allPairs = await Promise.all(Object.keys(pairsToCompute).map(async (key) => await computeDataForPair(key, pairsToCompute[key])));
+            const allPairs = await Promise.all(promises);
 
             // let result = await Promise.all(
             //     tokens.map(async (_) => {
