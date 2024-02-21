@@ -311,7 +311,7 @@ function getUnifiedDataForIntervalByFilename(fullFilename, fromBlock, toBlock, s
 
     const fileContent = readDataFromFile(fullFilename);
     if(fileContent.length <= 2) {
-        console.log(`No data in file ${fullFilename}`);
+        // console.log(`No data in file ${fullFilename}`);
         return undefined;
     }
     const unifiedData = getBlankUnifiedData(fromBlock, toBlock, stepBlock);
