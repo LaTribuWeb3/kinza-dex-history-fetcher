@@ -25,22 +25,36 @@ async function wombatHistoryFetcher() {
   //instantiate RPC
   const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
   const multicallProvider = new providers.MulticallProvider(web3Provider);
+  const currentBlock = (await web3Provider.getBlockNumber()) - 10;
 
   const promises = [];
   for (const pool of wombatPools) {
     console.log(`Starting ${pool.poolName}`);
-    const promise = fetchHistoryForPool(pool, multicallProvider, web3Provider);
+    const promise = fetchHistoryForPool(pool, multicallProvider, web3Provider, currentBlock);
     // await promise(); // uncomment to exec sequentially, better for debug
     promises.push(promise);
 
     await sleep(2000);
   }
 
-  await Promise.all(promises);
+  const poolsData = await Promise.all(promises);
+
+  const fetcherResult = {
+    dataSourceName: 'wombat',
+    lastBlockFetched: currentBlock,
+    lastRunTimestampMs: Date.now(),
+    poolsFetched: poolsData
+  };
+
+  fs.writeFileSync(
+    path.join(DATA_DIR, 'wombat', 'wombat-fetcher-result.json'),
+    JSON.stringify(fetcherResult, null, 2)
+  );
+
 
   await generateUnifiedFileWombat();
 }
-async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
+async function fetchHistoryForPool(pool, multicallProvider, web3Provider, currentBlock) {
   const poolContract = new Contract(pool.poolAddress, pool.poolAbi, multicallProvider);
 
   //get poolTokens
@@ -52,7 +66,6 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   }
 
   const historyFileName = path.join(DATA_DIR, 'wombat', `${pool.poolName}_wombat.csv`);
-  const currentBlock = (await web3Provider.getBlockNumber()) - 10;
 
   const blockStep = 1200;
   const oneYearInBlocks = 10519200;
@@ -117,6 +130,11 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider) {
   }
 
   console.log(`Ending ${pool.poolName}`);
+  return {
+    tokens: pool.tokens,
+    address: pool.poolAddress,
+    label: pool.poolName,
+  };
 }
 
 module.exports = { wombatHistoryFetcher };
