@@ -18,6 +18,7 @@ const fs = require('fs');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
 const { computeAverageSlippageMap } = require('../data.interface/internal/data.interface.liquidity');
 const { getConfTokenBySymbol } = require('../utils/token.utils');
+const { max } = require('simple-statistics');
 
 const RPC_URL = process.env.RPC_URL;
 const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
@@ -91,13 +92,11 @@ async function computeDataForPair(base, quotes) {
     const newSubMarket = await computeSubMarket(base, quote);
     subMarkets.push(newSubMarket);
   }
-  let totalRiskLevel = 0.0;
-  for (const subMarket of subMarkets) {
-    totalRiskLevel += subMarket.riskLevel;
-  }
+
+  let riskLevel = Math.max(...subMarkets.map((_) => _.riskLevel));
   let data = {};
   data[base] = {
-    riskLevel: totalRiskLevel / subMarkets.length,
+    riskLevel: riskLevel,
     subMarkets: subMarkets
   };
   return data;
