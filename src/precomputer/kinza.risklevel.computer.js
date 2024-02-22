@@ -1,19 +1,16 @@
-const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { ethers } = require('ethers');
-const { sleep, fnName, roundTo, logFnDurationWithLabel, retry } = require('../utils/utils');
+const { sleep, fnName, roundTo, retry } = require('../utils/utils');
 const { default: axios } = require('axios');
 const { RecordMonitoring } = require('../utils/monitoring');
 const { pairsToCompute } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderAddress } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderABI } = require('./kinza.risklevel.computer.config');
 const {
-  getLiquidity,
-  getVolatility,
   getRollingVolatility,
   getLiquidityAll
 } = require('../data.interface/data.interface');
 const path = require('path');
-const { SPANS, PLATFORMS, DATA_DIR, TARGET_SLIPPAGES, BLOCK_PER_DAY } = require('../utils/constants');
+const { DATA_DIR, BLOCK_PER_DAY } = require('../utils/constants');
 const fs = require('fs');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
 const { computeAverageSlippageMap } = require('../data.interface/internal/data.interface.liquidity');
@@ -91,13 +88,11 @@ async function computeDataForPair(base, quotes) {
     const newSubMarket = await computeSubMarket(base, quote);
     subMarkets.push(newSubMarket);
   }
-  let totalRiskLevel = 0.0;
-  for (const subMarket of subMarkets) {
-    totalRiskLevel += subMarket.riskLevel;
-  }
+
+  let riskLevel = Math.max(...subMarkets.map((_) => _.riskLevel));
   let data = {};
   data[base] = {
-    riskLevel: totalRiskLevel / subMarkets.length,
+    riskLevel: riskLevel,
     subMarkets: subMarkets
   };
   return data;
