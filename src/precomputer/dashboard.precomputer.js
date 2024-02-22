@@ -20,8 +20,9 @@ const { median } = require('simple-statistics');
 const { watchedPairs } = require('../global.config');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
 const { getPrices } = require('../data.interface/internal/data.interface.price');
+const { precomputeRiskLevelKinza } = require('./kinza.risklevel.computer');
 
-const RUN_EVERY_MINUTES = 6 * 60; // in minutes
+const RUN_EVERY_MINUTES = process.env.RUN_EVERY || 3 * 60; // in minutes
 const MONITORING_NAME = 'Dashboard Precomputer';
 const RPC_URL = process.env.RPC_URL;
 const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
@@ -36,6 +37,10 @@ async function PrecomputeDashboardData() {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
+
+    // compute risk levels
+    await precomputeRiskLevelKinza(true);
+
     const runStartDate = Date.now();
     console.log({ TARGET_DATA_POINTS });
     console.log({ NB_DAYS });
@@ -94,8 +99,8 @@ async function PrecomputeDashboardData() {
       // we will take the data from 'X - avgStep' to 'X'
       const avgStep = BLOCK_PER_DAY * NB_DAYS_AVG;
       console.log({ avgStep });
-      const dirPath = path.join(DATA_DIR, 'precomputed', 'dashboard');
-      if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'dashboard'))) {
+      const dirPath = path.join(DATA_DIR, 'precomputed', 'dashboard', 'pairs');
+      if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'dashboard', 'pairs'))) {
         fs.mkdirSync(dirPath, { recursive: true });
       }
 
