@@ -8,7 +8,7 @@ const pairsToCompute = {
     'ETH',
     'WBNB',
     'wBETH',
-    'lisUSD', //  'lisUSD'
+    'lisUSD',
     // 'slisBNB',
     'FDUSD'
   ],
@@ -21,7 +21,7 @@ const pairsToCompute = {
     'ETH',
     'WBNB',
     'wBETH',
-    'lisUSD', //  'lisUSD'
+    'lisUSD',
     // 'slisBNB',
     'FDUSD'
   ],
@@ -32,7 +32,7 @@ const pairsToCompute = {
     'BTCB',
     'WBNB',
     'wBETH',
-    'lisUSD', //  'lisUSD'
+    'lisUSD',
     // 'slisBNB',
     'FDUSD'
   ],
@@ -43,7 +43,7 @@ const pairsToCompute = {
     'BTCB',
     'ETH',
     'wBETH',
-    'lisUSD', //  'lisUSD'
+    'lisUSD',
     // 'slisBNB',
     'FDUSD'
   ],
@@ -54,7 +54,7 @@ const pairsToCompute = {
     'BTCB',
     'ETH',
     'WBNB',
-    'lisUSD', //  'lisUSD'
+    'lisUSD',
     // 'slisBNB',
     'FDUSD'
   ],
@@ -71,7 +71,7 @@ const pairsToCompute = {
   //     'ETH',
   //     'WBNB',
   //     'wBETH',
-  //     'lisUSD', //  'lisUSD'
+  //     'lisUSD',
   //     'slisBNB',
   //     'FDUSD'
   // ],
@@ -83,7 +83,7 @@ const pairsToCompute = {
     'ETH',
     'WBNB',
     'wBETH',
-    'lisUSD' //  'lisUSD'
+    'lisUSD'
     // 'slisBNB',
   ]
 };
