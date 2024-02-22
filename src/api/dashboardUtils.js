@@ -26,13 +26,13 @@ function getKinzaOverview() {
 }
 
 function getAvailableForDashboard(platform) {
-  const availableFiles = fs
+  let availableFiles = fs
     .readdirSync(path.join(dirPath, 'pairs'))
     .filter((_) => _.endsWith('.json') && _.includes(platform));
 
   if (platform === 'pancake') {
     availableFiles = fs
-      .readdirSync(dirPath)
+      .readdirSync(path.join(dirPath, 'pairs'))
       .filter(
         (_) =>
           _.endsWith('.json') && _.includes('pancake') && !_.includes('pancakeswapv2') && !_.includes('pancakeswapv3')
@@ -50,7 +50,7 @@ function getAvailableForDashboard(platform) {
 }
 
 function getDataForPairAndPlatform(platform, base, quote) {
-  const searchFilename = path.join(dirPath, `${base}-${quote}-${platform}.json`);
+  const searchFilename = path.join(dirPath, 'pairs', `${base}-${quote}-${platform}.json`);
   if (!fs.existsSync(searchFilename)) {
     throw new Error(`Could not find data for ${base} ${quote} and ${platform}`);
   }
