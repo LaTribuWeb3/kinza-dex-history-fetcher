@@ -1,19 +1,16 @@
-const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { ethers } = require('ethers');
-const { sleep, fnName, roundTo, logFnDurationWithLabel, retry } = require('../utils/utils');
+const { sleep, fnName, roundTo, retry } = require('../utils/utils');
 const { default: axios } = require('axios');
 const { RecordMonitoring } = require('../utils/monitoring');
 const { pairsToCompute } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderAddress } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderABI } = require('./kinza.risklevel.computer.config');
 const {
-  getLiquidity,
-  getVolatility,
   getRollingVolatility,
   getLiquidityAll
 } = require('../data.interface/data.interface');
 const path = require('path');
-const { SPANS, PLATFORMS, DATA_DIR, TARGET_SLIPPAGES, BLOCK_PER_DAY } = require('../utils/constants');
+const { DATA_DIR, BLOCK_PER_DAY } = require('../utils/constants');
 const fs = require('fs');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
 const { computeAverageSlippageMap } = require('../data.interface/internal/data.interface.liquidity');
@@ -27,7 +24,7 @@ const MONITORING_NAME = 'Kinza Risk Level V2';
 /**
  * Precompute data for the risk oracle front
  */
-async function precomputeRiskLevelKinza() {
+async function precomputeRiskLevelKinza(onlyOnce = false) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
@@ -54,7 +51,14 @@ async function precomputeRiskLevelKinza() {
 
       const allPairs = await Promise.all(promises);
 
-      const stringified = JSON.stringify(allPairs, null, 2);
+      const kinzaOverview = {};
+      for(const pair of allPairs) {
+        for(const base of Object.keys(pair)) {
+          kinzaOverview[base] = pair[base];
+        }
+      }
+
+      const stringified = JSON.stringify(kinzaOverview, null, 2);
       console.log(stringified);
       fs.writeFileSync(path.join(dirPath, 'kinza-overview.json'), stringified);
     } catch (error) {
@@ -75,6 +79,10 @@ async function precomputeRiskLevelKinza() {
       lastEnd: runEndDate,
       lastDuration: runEndDate - Math.round(runStartDate / 1000)
     });
+
+    if(onlyOnce) {
+      return;
+    }
 
     const sleepTime = RUN_EVERY_MINUTES * 60 * 1000 - (Date.now() - runStartDate);
     if (sleepTime > 0) {
@@ -191,4 +199,6 @@ function findRiskLevelFromParameters(
   return r;
 }
 
-precomputeRiskLevelKinza();
+// precomputeRiskLevelKinza();
+
+module.exports = { precomputeRiskLevelKinza };
