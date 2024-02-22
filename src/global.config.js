@@ -258,7 +258,7 @@ const watchedPairs = {
     },
     {
       quote: 'lisUSD',
-      pivots: ['WBNB'],
+      pivots: undefined,
       exportToInternalDashboard: true
     },
     {
