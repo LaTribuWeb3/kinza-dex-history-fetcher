@@ -19,7 +19,7 @@ const { getConfTokenBySymbol } = require('../utils/token.utils');
 const RPC_URL = process.env.RPC_URL;
 const web3Provider = new ethers.providers.StaticJsonRpcProvider(RPC_URL);
 const RUN_EVERY_MINUTES = process.env.RUN_EVERY || 3 * 60; // in minutes
-const MONITORING_NAME = 'Kinza Risk Level V2';
+const MONITORING_NAME = 'Kinza Risk Level';
 
 /**
  * Precompute data for the risk oracle front
