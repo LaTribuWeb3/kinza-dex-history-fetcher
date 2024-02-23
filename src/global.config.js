@@ -157,7 +157,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -199,7 +199,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -236,7 +236,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -268,7 +268,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -295,7 +295,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -317,7 +317,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -346,12 +346,24 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: undefined,
+      pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    }
+  ],
+  slisBNB: [
+    {
+      quote: 'USDT',
+      pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'USDC',
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ]
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'TUSD'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'TUSD', 'slisBNB'];
 
 module.exports = { tokens, watchedPairs, pairsToFetch };
