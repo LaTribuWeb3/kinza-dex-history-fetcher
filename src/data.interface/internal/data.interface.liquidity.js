@@ -280,9 +280,15 @@ function getSlippageMapForIntervalWithJumpsFromWBETH(
   // specific case, compute aggregated route ETH=>{toSymbol}
   // and then another round with wBETH=>Aggregated route computed before
   const ethToSymbolData = getSlippageMapForIntervalWithJumps('ETH', toSymbol, fromBlock, toBlock, platform, stepBlock);
+  if (!ethToSymbolData) {
+    return undefined;
+  }
 
   // find direct liquidity wBETH=>ETH
   let wBETHETHData = getUnifiedDataForInterval(platform, 'wBETH', 'ETH', fromBlock, toBlock, stepBlock, []);
+  if (!wBETHETHData.unifiedData) {
+    return undefined;
+  }
 
   for (const [blockNumber, wbethData] of Object.entries(wBETHETHData.unifiedData)) {
     liquidityData[blockNumber] = {
@@ -327,9 +333,14 @@ function getSlippageMapForIntervalWithJumpsToWBETH(
     platform,
     stepBlock
   );
-
+  if (!symbolToEthData) {
+    return undefined;
+  }
   // find direct liquidity ETH=>wBETH
   let ETHwBETHData = getUnifiedDataForInterval(platform, 'ETH', 'wBETH', fromBlock, toBlock, stepBlock, []);
+  if (!ETHwBETHData.unifiedData) {
+    return undefined;
+  }
 
   for (const [blockNumber, symbolToEthLiquidity] of Object.entries(symbolToEthData)) {
     liquidityData[blockNumber] = {
@@ -531,9 +542,15 @@ function getLiquidityAccrossDexesFromWBETH(toSymbol, fromBlock, toBlock, stepBlo
   const liquidityData = {};
   // get aggregated liquidity accross dexes ETH=>{ToSymbol}
   const ethToSymbolData = getLiquidityAccrossDexes('ETH', toSymbol, fromBlock, toBlock, stepBlock);
+  if (!ethToSymbolData) {
+    return undefined;
+  }
 
   // get sum slippage map for wBETH=>ETH
   const wBETHETHData = getSumSlippageMapAcrossDexes('wBETH', 'ETH', fromBlock, toBlock, stepBlock);
+  if (!wBETHETHData.unifiedData) {
+    return undefined;
+  }
 
   for (const [blockNumber, wbethData] of Object.entries(wBETHETHData.unifiedData)) {
     liquidityData[blockNumber] = {
@@ -564,9 +581,15 @@ function getLiquidityAccrossDexesToWBETH(fromSymbol, fromBlock, toBlock, stepBlo
   const liquidityData = {};
   // get aggregated liquidity accross dexes {toSymbol}=>ETH
   const symbolToEthData = getLiquidityAccrossDexes(fromSymbol, 'ETH', fromBlock, toBlock, stepBlock);
+  if (!symbolToEthData) {
+    return undefined;
+  }
 
   // get sum slippage map for ETH=>wBETH
   const ETHwBETHData = getSumSlippageMapAcrossDexes('ETH', 'wBETH', fromBlock, toBlock, stepBlock);
+  if (!ETHwBETHData.unifiedData) {
+    return undefined;
+  }
 
   for (const [blockNumber, symbolToEthLiquidity] of Object.entries(symbolToEthData)) {
     liquidityData[blockNumber] = {
