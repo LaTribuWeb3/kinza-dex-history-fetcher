@@ -233,6 +233,9 @@ async function FetchpancakeswapV2HistoryForPair(web3Provider, pairKey, historyFi
   if (startBlock < minStartBlock) {
     startBlock = minStartBlock;
   }
+  if (pairAddress == '0xda83f6b25b5b9e2b042fab04067e0fadfa106135') {
+    startBlock = 36095531;
+  }
 
   console.log(
     `${fnName()}[${pairKey}]: start fetching data for ${
