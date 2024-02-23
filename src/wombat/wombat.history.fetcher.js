@@ -46,11 +46,7 @@ async function wombatHistoryFetcher() {
     poolsFetched: poolsData
   };
 
-  fs.writeFileSync(
-    path.join(DATA_DIR, 'wombat', 'wombat-fetcher-result.json'),
-    JSON.stringify(fetcherResult, null, 2)
-  );
-
+  fs.writeFileSync(path.join(DATA_DIR, 'wombat', 'wombat-fetcher-result.json'), JSON.stringify(fetcherResult, null, 2));
 
   await generateUnifiedFileWombat();
 }
@@ -133,7 +129,7 @@ async function fetchHistoryForPool(pool, multicallProvider, web3Provider, curren
   return {
     tokens: pool.tokens,
     address: pool.poolAddress,
-    label: pool.poolName,
+    label: pool.poolName
   };
 }
 

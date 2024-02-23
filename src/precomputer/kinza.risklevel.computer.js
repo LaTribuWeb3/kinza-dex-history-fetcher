@@ -5,10 +5,7 @@ const { RecordMonitoring } = require('../utils/monitoring');
 const { pairsToCompute } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderAddress } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderABI } = require('./kinza.risklevel.computer.config');
-const {
-  getRollingVolatility,
-  getLiquidityAll
-} = require('../data.interface/data.interface');
+const { getRollingVolatility, getLiquidityAll } = require('../data.interface/data.interface');
 const path = require('path');
 const { DATA_DIR, BLOCK_PER_DAY } = require('../utils/constants');
 const fs = require('fs');
@@ -52,8 +49,8 @@ async function precomputeRiskLevelKinza(onlyOnce = false) {
       const allPairs = await Promise.all(promises);
 
       const kinzaOverview = {};
-      for(const pair of allPairs) {
-        for(const base of Object.keys(pair)) {
+      for (const pair of allPairs) {
+        for (const base of Object.keys(pair)) {
           kinzaOverview[base] = pair[base];
         }
       }
@@ -80,7 +77,7 @@ async function precomputeRiskLevelKinza(onlyOnce = false) {
       lastDuration: runEndDate - Math.round(runStartDate / 1000)
     });
 
-    if(onlyOnce) {
+    if (onlyOnce) {
       return;
     }
 
