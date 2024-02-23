@@ -9,7 +9,9 @@ const { getPrices } = require('./internal/data.interface.price');
 const {
   getAverageLiquidityForInterval,
   getSlippageMapForInterval,
-  getLiquidityAccrossDexes
+  getLiquidityAccrossDexes,
+  getLiquidityAccrossDexesFromWBETH,
+  getLiquidityAccrossDexesToWBETH
 } = require('./internal/data.interface.liquidity');
 const { logFnDurationWithLabel } = require('../utils/utils');
 const { PLATFORMS, DEFAULT_STEP_BLOCK, LAMBDA } = require('../utils/constants');
@@ -92,7 +94,14 @@ function getLiquidity(
  * @returns {{[blocknumber: number]: {price: number, slippageMap: {[slippageBps: number]: {base: number, quote: number}}}}}
  */
 function getLiquidityAll(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock = DEFAULT_STEP_BLOCK) {
-  return getLiquidityAccrossDexes(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock);
+  if(fromSymbol == 'wBETH' && toSymbol != 'ETH') {
+    return getLiquidityAccrossDexesFromWBETH(toSymbol, fromBlock, toBlock, stepBlock);
+  } else if(fromSymbol != 'ETH' && toSymbol == 'wBETH') {
+    return getLiquidityAccrossDexesToWBETH(fromSymbol, fromBlock, toBlock, stepBlock);
+  } 
+  else {
+    return getLiquidityAccrossDexes(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock);
+  }
 }
 
 async function getRollingVolatility(platform, fromSymbol, toSymbol, web3Provider, lambda = LAMBDA) {
