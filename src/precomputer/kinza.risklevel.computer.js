@@ -118,7 +118,9 @@ async function computeSubMarket(base, quote) {
     web3Provider
   );
 
+  // if wBETH/USDC, baseReserveCaps is for wBETH
   const baseReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [baseConf.address]);
+  // if wBETH/USDC, quoteReserveCaps is for USDC
   const quoteReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [quoteConf.address]);
   const reserveDataConfigurationQuote = await retry(protocolDataProviderContract.getReserveConfigurationData, [
     quoteTokenAddress
@@ -133,7 +135,11 @@ async function computeSubMarket(base, quote) {
   let riskLevel = 0.0;
 
   const liquidationBonusBps = reserveDataConfigurationQuote.liquidationBonus.toNumber() - 10000;
-  const borrowCap = baseReserveCaps.borrowCap.toNumber(); // already with the good amount of decimals, no need to normalize
+
+  // Yaron: Ah, so technically the minimum between wBETH supply cap and USDC borrow cap
+  const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
+  const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
+  const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
   const ltvBps = reserveDataConfigurationQuote.ltv.toNumber();
 
   const currentBlock = (await web3Provider.getBlockNumber()) - 10;
@@ -148,13 +154,14 @@ async function computeSubMarket(base, quote) {
   }
 
   const liquidity = averageLiquidityOn30Days.slippageMap[liquidationBonusBps].base;
+  const liquidityUsd = liquidity * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
   const selectedVolatility = volatility.latest.current;
   riskLevel = findRiskLevelFromParameters(
     selectedVolatility,
-    liquidity,
+    liquidityUsd,
     liquidationBonusBps / 10000,
     ltvBps / 10000,
-    borrowCap
+    capToUseUsd
   );
   const pairValue = {
     quote: quote,
