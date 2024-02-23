@@ -1,5 +1,5 @@
 const { computeAggregatedVolumeFromPivot } = require('../../utils/aggregator');
-const { DEFAULT_STEP_BLOCK, PLATFORMS } = require('../../utils/constants');
+const { DEFAULT_STEP_BLOCK, PLATFORMS, BLOCK_PER_DAY } = require('../../utils/constants');
 const { fnName } = require('../../utils/utils');
 const { getUnifiedDataForInterval, getBlankUnifiedData, getDefaultSlippageMap } = require('./data.interface.utils');
 
@@ -54,15 +54,36 @@ function getSlippageMapForInterval(
 ) {
   // with jumps mean that we will try to add pivot routes (with WBTC, WETH and USDC as pivot)
   if (withJumps) {
-    const liquidityDataWithJumps = getSlippageMapForIntervalWithJumps(
-      fromSymbol,
-      toSymbol,
-      fromBlock,
-      toBlock,
-      platform,
-      stepBlock
-    );
-    return liquidityDataWithJumps;
+    if(fromSymbol == 'wBETH') {
+      const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsFromWBETH(
+        toSymbol,
+        fromBlock,
+        toBlock,
+        platform,
+        stepBlock
+      );
+      return liquidityDataWithJumps;
+    } else if(toSymbol == 'wBETH') {
+      const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsToWBETH(
+        fromSymbol,
+        fromBlock,
+        toBlock,
+        platform,
+        stepBlock
+      );
+      return liquidityDataWithJumps;
+    }
+    else {
+      const liquidityDataWithJumps = getSlippageMapForIntervalWithJumps(
+        fromSymbol,
+        toSymbol,
+        fromBlock,
+        toBlock,
+        platform,
+        stepBlock
+      );
+      return liquidityDataWithJumps;
+    }
   } else {
     const liquidityData = getUnifiedDataForInterval(platform, fromSymbol, toSymbol, fromBlock, toBlock, stepBlock, []);
     return liquidityData.unifiedData;
@@ -247,6 +268,102 @@ function getSlippageMapForIntervalWithJumps(
   return liquidityData;
 }
 
+// const liquidity = getSlippageMapForIntervalWithJumpsFromWBETH('FDUSD', 36383327 - (30 * BLOCK_PER_DAY) , 36383327, 'pancakeswapv3');
+
+function getSlippageMapForIntervalWithJumpsFromWBETH(
+  toSymbol,
+  fromBlock,
+  toBlock,
+  platform,
+  stepBlock = DEFAULT_STEP_BLOCK
+) {
+  const liquidityData = {};
+  // specific case, compute aggregated route ETH=>{toSymbol}
+  // and then another round with wBETH=>Aggregated route computed before
+  const ethToSymbolData =  getSlippageMapForIntervalWithJumps(
+    'ETH',
+    toSymbol,
+    fromBlock,
+    toBlock,
+    platform,
+    stepBlock
+  );
+
+  // find direct liquidity wBETH=>ETH
+  let wBETHETHData = getUnifiedDataForInterval(platform, 'wBETH', 'ETH', fromBlock, toBlock, stepBlock, []);
+
+  for (const [blockNumber, wbethData] of Object.entries(wBETHETHData.unifiedData)) {
+    liquidityData[blockNumber] = {
+      price: wbethData.price,
+      slippageMap: getDefaultSlippageMap()
+    };
+
+    const segment1DataForBlock = wbethData;
+    const segment2DataForBlock = ethToSymbolData[blockNumber];
+
+    for (const slippageBps of Object.keys(liquidityData[blockNumber].slippageMap)) {
+      const aggregVolume = computeAggregatedVolumeFromPivot(
+        segment1DataForBlock.slippageMap,
+        segment2DataForBlock.slippageMap,
+        slippageBps
+      );
+      liquidityData[blockNumber].slippageMap[slippageBps].base = aggregVolume.base;
+      liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
+    }
+  }
+
+
+  return liquidityData;
+}
+
+// const liquidity = getSlippageMapForIntervalWithJumpsToWBETH('TUSD', 36383327 - (30 * BLOCK_PER_DAY) , 36383327, 'pancakeswapv3');
+
+function getSlippageMapForIntervalWithJumpsToWBETH(
+  fromSymbol,
+  fromBlock,
+  toBlock,
+  platform,
+  stepBlock = DEFAULT_STEP_BLOCK
+) {
+  const liquidityData = {};
+  // specific case, compute aggregated route {fromSymbol}=>ETH
+  // and then another round with Aggregated route=>wBETH computed before
+  const symbolToEthData = getSlippageMapForIntervalWithJumps(
+    fromSymbol,
+    'ETH',
+    fromBlock,
+    toBlock,
+    platform,
+    stepBlock
+  );
+
+  // find direct liquidity ETH=>wBETH
+  let ETHwBETHData = getUnifiedDataForInterval(platform, 'ETH', 'wBETH', fromBlock, toBlock, stepBlock, []);
+
+  for (const [blockNumber, symbolToEthLiquidity] of Object.entries(symbolToEthData)) {
+    liquidityData[blockNumber] = {
+      price: symbolToEthLiquidity.price,
+      slippageMap: getDefaultSlippageMap()
+    };
+
+    const segment1DataForBlock = symbolToEthLiquidity;
+    const segment2DataForBlock = ETHwBETHData.unifiedData[blockNumber];
+
+    for (const slippageBps of Object.keys(liquidityData[blockNumber].slippageMap)) {
+      const aggregVolume = computeAggregatedVolumeFromPivot(
+        segment1DataForBlock.slippageMap,
+        segment2DataForBlock.slippageMap,
+        slippageBps
+      );
+      liquidityData[blockNumber].slippageMap[slippageBps].base = aggregVolume.base;
+      liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
+    }
+  }
+
+
+  return liquidityData;
+}
+
 function getPivotDataForBlock(pivotData, base, quote, blockNumber) {
   if (!pivotData) {
     return undefined;
@@ -418,6 +535,73 @@ function getLiquidityAccrossDexes(fromSymbol, toSymbol, fromBlock, toBlock, step
   return liquidityData;
 }
 
+// getLiquidityAccrossDexesFromWBETH('TUSD', 36383327 - (30 * BLOCK_PER_DAY) , 36383327);
+
+function getLiquidityAccrossDexesFromWBETH(toSymbol, fromBlock, toBlock, stepBlock = DEFAULT_STEP_BLOCK) {
+  const liquidityData = {};
+  // get aggregated liquidity accross dexes ETH=>{ToSymbol}
+  const ethToSymbolData = getLiquidityAccrossDexes('ETH', toSymbol, fromBlock, toBlock, stepBlock);
+
+  // get sum slippage map for wBETH=>ETH
+  const wBETHETHData = getSumSlippageMapAcrossDexes('wBETH', 'ETH', fromBlock, toBlock, stepBlock);
+
+  for (const [blockNumber, wbethData] of Object.entries(wBETHETHData.unifiedData)) {
+    liquidityData[blockNumber] = {
+      price: wbethData.price,
+      slippageMap: getDefaultSlippageMap()
+    };
+
+    const segment1DataForBlock = wbethData;
+    const segment2DataForBlock = ethToSymbolData[blockNumber];
+
+    for (const slippageBps of Object.keys(liquidityData[blockNumber].slippageMap)) {
+      const aggregVolume = computeAggregatedVolumeFromPivot(
+        segment1DataForBlock.slippageMap,
+        segment2DataForBlock.slippageMap,
+        slippageBps
+      );
+      liquidityData[blockNumber].slippageMap[slippageBps].base = aggregVolume.base;
+      liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
+    }
+  }
+  
+  return liquidityData;
+}
+
+// getLiquidityAccrossDexesToWBETH('FDUSD', 36383327 - (30 * BLOCK_PER_DAY) , 36383327);
+
+function getLiquidityAccrossDexesToWBETH(fromSymbol, fromBlock, toBlock, stepBlock = DEFAULT_STEP_BLOCK) {
+  const liquidityData = {};
+  // get aggregated liquidity accross dexes {toSymbol}=>ETH
+  const symbolToEthData = getLiquidityAccrossDexes(fromSymbol, 'ETH', fromBlock, toBlock, stepBlock);
+
+  // get sum slippage map for ETH=>wBETH
+  const ETHwBETHData = getSumSlippageMapAcrossDexes('ETH', 'wBETH', fromBlock, toBlock, stepBlock);
+
+  for (const [blockNumber, symbolToEthLiquidity] of Object.entries(symbolToEthData)) {
+    liquidityData[blockNumber] = {
+      price: symbolToEthLiquidity.price,
+      slippageMap: getDefaultSlippageMap()
+    };
+
+    const segment1DataForBlock = symbolToEthLiquidity;
+    const segment2DataForBlock = ETHwBETHData.unifiedData[blockNumber];
+
+    for (const slippageBps of Object.keys(liquidityData[blockNumber].slippageMap)) {
+      const aggregVolume = computeAggregatedVolumeFromPivot(
+        segment1DataForBlock.slippageMap,
+        segment2DataForBlock.slippageMap,
+        slippageBps
+      );
+      liquidityData[blockNumber].slippageMap[slippageBps].base = aggregVolume.base;
+      liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
+    }
+  }
+
+
+  return liquidityData;
+}
+
 function getPivotUnifiedDataAccrossDexes(
   pivots,
   fromSymbol,
@@ -527,5 +711,7 @@ module.exports = {
   getAverageLiquidityForInterval,
   getSlippageMapForInterval,
   getLiquidityAccrossDexes,
+  getLiquidityAccrossDexesFromWBETH,
+  getLiquidityAccrossDexesToWBETH,
   computeAverageSlippageMap
 };

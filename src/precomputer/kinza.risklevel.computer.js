@@ -197,6 +197,6 @@ function findRiskLevelFromParameters(
   return r;
 }
 
-// precomputeRiskLevelKinza();
+precomputeRiskLevelKinza();
 
 module.exports = { precomputeRiskLevelKinza };

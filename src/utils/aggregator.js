@@ -52,5 +52,307 @@ function computeAggregatedVolumeFromPivot(segment1Data, segment2Data, targetSlip
 
   return { base: maxBaseAmount, quote: quoteAmount };
 }
+/**
+ * 
+ * @param {{[slippageBps: number]: {base: number, quote: number}}} segment1SlippageMap for example, this is the liquidity data for wBETH->ETH
+ * @param {{[slippageBps: number]: {base: number, quote: number}}} segment2SlippageMap for example, this is the liquidity data for ETH->USDT
+ * @param {{[slippageBps: number]: {base: number, quote: number}}} segment3SlippageMap for example, this is the liquidity data for USDT->TUSD
+ * @returns {{base: number, quote: number}} for example base is wBETH and quote is TUSD
+ */
+function computeAggregatedVolumeFromPivot3(segment1SlippageMap, segment2SlippageMap, segment3SlippageMap) {
+  let maxBase = 0;
+  let quote = 0;
+  let selectedOptions= [];
+
+  const allOptions = generateAllOptions(50, 800, 3);
+  for(const options of allOptions) {
+    // console.log(options);
+    const segment1Data = segment1SlippageMap[options[0]];
+    const segment2Data = segment2SlippageMap[options[1]];
+    const segment3Data = segment3SlippageMap[options[2]];
+
+    const data = computeAggregate3(segment1Data, segment2Data, segment3Data);
+
+    if(data.base > maxBase) {
+      selectedOptions = options;
+      maxBase = data.base;
+      quote = data.quote;
+    }
+  }
+
+  console.log(`Best options: ${selectedOptions}`);
+  return {base: maxBase, quote};
+}
+
+/**
+ * Compute the aggregated volume from 3 segments
+ * Example wBETH->ETH + ETH->USDT + USDT->TUSD
+ * @param {{base: number, quote: number}} segment1Data 
+ * @param {{base: number, quote: number}} segment2Data 
+ * @param {{base: number, quote: number}} segment3Data
+ * @returns {{base: number, quote: number}} 
+ */
+function computeAggregate3(segment1Data, segment2Data, segment3Data) {
+  // console.log({segment1Data});
+  // console.log({segment2Data});
+  // console.log({segment3Data});
+  const rate1 = segment1Data.quote / segment1Data.base;
+  const rate2 = segment2Data.quote / segment2Data.base;
+  const rate3 = segment3Data.quote / segment3Data.base;
+  let baseUtilization = 1; // 100% base1
+  if(segment1Data.quote > segment2Data.base) {
+    // if we cannot dump all quote obtained from segment1 to the base of segment2, compute
+    // the % of base utilization. Example if wBETH->ETH is 30 wBETH => 45 ETH
+    // but the ETH->USDT segment is 5 ETH -> 15k USDT, we will compute 5/45 = 11% utilization
+    baseUtilization = segment2Data.base / segment1Data.quote;
+  }
+
+  const base1ReallySold = segment1Data.base * baseUtilization;
+  const quote1Obtained = base1ReallySold * rate1;
+  const quote2Obtained = quote1Obtained * rate2; // this is USDT
+  let segment2Utilization = 1;
+  if(quote2Obtained > segment3Data.base) {
+    // if we cannot dump all quote obtained from segment2 to the base of segment3, compute
+    // the % of base utilization. Example if ETH->USDT is 5 ETH => 15k USDT
+    // but the USDT->TUSD segment is 3k USDT -> 3k TUSD, we will compute 3k/15k and apply it to the already computed baseUtilization
+    segment2Utilization = segment3Data.base / quote2Obtained;
+    baseUtilization = baseUtilization * segment2Utilization;
+  }
+
+
+  const base2ReallySold = segment2Data.base * segment2Utilization;
+  const quote2ReallyObtained = base2ReallySold * rate2;
+  const quote3Obtained = quote2ReallyObtained * rate3; // this is TUSD
+  const baseUsed = segment1Data.base * baseUtilization;
+
+  return {base: baseUsed, quote: quote3Obtained};
+}
+
+const wBETHETHSlippageMap = {
+  '50': {
+    'base': 388.4476791825441,
+    'quote': 399.1754663153312
+  },
+  '100': {
+    'base': 746.1437193979058,
+    'quote': 764.8276177588104
+  },
+  '150': {
+    'base': 1033.836706737315,
+    'quote': 1057.5973186331057
+  },
+  '200': {
+    'base': 1037.8672022860346,
+    'quote': 1061.676442289478
+  },
+  '250': {
+    'base': 1041.943883280888,
+    'quote': 1065.781713839842
+  },
+  '300': {
+    'base': 1045.942024048689,
+    'quote': 1069.7878579643993
+  },
+  '350': {
+    'base': 1049.1480174692922,
+    'quote': 1072.9858475591166
+  },
+  '400': {
+    'base': 1050.759110672715,
+    'quote': 1074.5880894523825
+  },
+  '450': {
+    'base': 1050.769240284082,
+    'quote': 1074.5980982408407
+  },
+  '500': {
+    'base': 1050.7793952498891,
+    'quote': 1074.6080820398274
+  },
+  '550': {
+    'base': 1050.7895756335993,
+    'quote': 1074.618040911735
+  },
+  '600': {
+    'base': 1050.7977382842055,
+    'quote': 1074.6259901035921
+  },
+  '650': {
+    'base': 1050.8079645805724,
+    'quote': 1074.6359042634888
+  },
+  '700': {
+    'base': 1050.8182164733828,
+    'quote': 1074.645793670178
+  },
+  '750': {
+    'base': 1050.8264364601187,
+    'quote': 1074.6536874147564
+  },
+  '800': {
+    'base': 1050.830707962775,
+    'quote': 1074.6577767280112
+  }
+};
+
+const ETHUSDTSlippageMap = {
+  '50': {
+    'base': 8.51213664031093,
+    'quote': 25018.604153192828
+  },
+  '100': {
+    'base': 15.874837865301465,
+    'quote': 46542.79044781314
+  },
+  '150': {
+    'base': 23.25592588791115,
+    'quote': 68013.11362528069
+  },
+  '200': {
+    'base': 30.283036606341067,
+    'quote': 88352.4214099337
+  },
+  '250': {
+    'base': 37.37546864270023,
+    'quote': 108776.9861693071
+  },
+  '300': {
+    'base': 44.58839383431093,
+    'quote': 129446.53792562203
+  },
+  '350': {
+    'base': 51.26316936930275,
+    'quote': 148477.69119425313
+  },
+  '400': {
+    'base': 59.2569371677605,
+    'quote': 171145.12119363045
+  },
+  '450': {
+    'base': 65.92766263490452,
+    'quote': 189956.95401502668
+  },
+  '500': {
+    'base': 71.69875171843,
+    'quote': 206151.47139469726
+  },
+  '550': {
+    'base': 76.51846143739012,
+    'quote': 219609.99070907044
+  },
+  '600': {
+    'base': 80.35330073644788,
+    'quote': 230257.5707760472
+  },
+  '650': {
+    'base': 83.57130550818812,
+    'quote': 239143.37406461872
+  },
+  '700': {
+    'base': 86.7958886790319,
+    'quote': 248003.00759457285
+  },
+  '750': {
+    'base': 90.67107596011617,
+    'quote': 258592.25223135672
+  },
+  '800': {
+    'base': 93.9285955686875,
+    'quote': 267444.83108813176
+  }
+};
+
+const USDTTUSDSlippageMap  = {
+  '50': {
+    'base': 2362.8016041857913,
+    'quote': 2401.011971491324
+  },
+  '100': {
+    'base': 4720.469923831278,
+    'quote': 4784.826722584661
+  },
+  '150': {
+    'base': 158530.75050256675,
+    'quote': 159278.18284882844
+  },
+  '200': {
+    'base': 675632.2457141336,
+    'quote': 677014.418367639
+  },
+  '250': {
+    'base': 1034841.906951697,
+    'quote': 1035132.2257742397
+  },
+  '300': {
+    'base': 1035566.1948546824,
+    'quote': 1035850.3083192969
+  },
+  '350': {
+    'base': 1036202.097278385,
+    'quote': 1036477.6626818583
+  },
+  '400': {
+    'base': 1036839.5279164845,
+    'quote': 1037103.5129927673
+  },
+  '450': {
+    'base': 1037478.4904416478,
+    'quote': 1037727.8628579418
+  },
+  '500': {
+    'base': 1038118.4005576038,
+    'quote': 1038350.1560119533
+  },
+  '550': {
+    'base': 1038757.493607745,
+    'quote': 1038968.7206502561
+  },
+  '600': {
+    'base': 1039384.7601291434,
+    'quote': 1039572.9618129275
+  },
+  '650': {
+    'base': 1040013.5023863921,
+    'quote': 1040175.7847468477
+  },
+  '700': {
+    'base': 1040643.7238513749,
+    'quote': 1040777.1927807758
+  },
+  '750': {
+    'base': 1040791.436477445,
+    'quote': 1040917.743885212
+  },
+  '800': {
+    'base': 1040791.436477445,
+    'quote': 1040917.743885212
+  }
+};
+
+// console.log(computeAggregate3(wBETHETHSlippageMap[50], ETHUSDTSlippageMap[50], USDTTUSDSlippageMap[700])); // 0.5 0.5 7
+// console.log(computeAggregate3(wBETHETHSlippageMap[50], ETHUSDTSlippageMap[400], USDTTUSDSlippageMap[350])); // 0.5 0.5 7
+// console.log(computeAggregate3(wBETHETHSlippageMap[50], ETHUSDTSlippageMap[550], USDTTUSDSlippageMap[200])); // 0.5 0.5 7
+// console.log(computeAggregate3(wBETHETHSlippageMap[700], ETHUSDTSlippageMap[50], USDTTUSDSlippageMap[50])); // 0.5 0.5 7
+
+
+// computeAggregatedVolumeFromPivot3(wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap);
+
+function generateAllOptions(jumpSize, theSum, numVars) {
+  if (numVars === 1) {
+    return [[theSum]];
+  }
+  // else
+  let result = [];
+  let maxValue = theSum - (numVars - 1) * jumpSize;
+  for (let i = 0; i < Math.floor(maxValue / jumpSize); i++) {
+    let value = (i + 1) * jumpSize;
+    let options = generateAllOptions(jumpSize, theSum - value, numVars - 1);
+    let currList = [value];
+    for (let anOption of options) {
+      result.push(currList.concat(anOption));
+    }
+  }
+  return result;
+}
 
 module.exports = { computeAggregatedVolumeFromPivot };
