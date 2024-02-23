@@ -1,60 +1,71 @@
 const fs = require('fs');
-const { DATA_DIR } = require('../utils/constants');
 const path = require('path');
+const { DATA_DIR } = require('./constants');
 
-const file = path.join(DATA_DIR, 'precomputed', 'median', 'pancakeswapv3', 'TUSD-USDC-median-prices.csv');
 
-function debugPriceData(file) {
-  fs.readFile(file, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading the file:', err);
-      return;
-    }
+const directoryPath = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3');
+const percentageChangeThreshold = 15; // Define the percentage change threshold
+const shouldDeleteLines = false; // Parameter to determine if lines should be deleted
+const fileFilterString = 'USDT'; // Parameter to filter files by name
 
-    const lines = data.split('\n').filter((line) => line); // Split the file into lines and remove empty lines
-    const objectsArray = lines.slice(1).map((line) => {
-      // Skip the header line
-      const [timestamp, value] = line.split(','); // Split each line by comma
+function isSignificantDeviation(fromValue, toValue, threshold) {
+  let percentageVariation = (Math.abs(toValue - fromValue) / fromValue) * 100;
+  return percentageVariation >= threshold;
+}
+
+function processFile(filePath, shouldDelete) {
+  try {
+    let data = fs.readFileSync(filePath, 'utf8');
+    let lines = data.split('\n').filter((line) => line);
+    const originalLineCount = lines.length;
+
+    let objectsArray = lines.slice(1).map((line) => {
+      const [timestamp, value] = line.split(',');
       return {
         timestamp,
-        value: parseFloat(value) // Convert value string to float
+        value: parseFloat(value),
       };
     });
 
-    let maxObject = objectsArray.reduce((max, obj) => (obj.value > max.value ? obj : max), objectsArray[0]);
-    let minObject = objectsArray.reduce((min, obj) => (obj.value < min.value ? obj : min), objectsArray[0]);
-    let average = objectsArray.reduce((acc, obj) => acc + obj.value, 0) / objectsArray.length;
+    let indexesToDelete = [];
+    for (let i = 0; i < objectsArray.length - 1; i++) {
+      let currentValue = objectsArray[i].value;
+      let nextValue = objectsArray[i + 1].value;
 
-    console.log(`The smallest value is ${minObject.value} at timestamp ${minObject.timestamp}`);
-    console.log(`The largest value is ${maxObject.value} at timestamp ${maxObject.timestamp}`);
-    console.log(`The average value is ${average}`);
-
-    let changes = [];
-    for (let i = 1; i < objectsArray.length; i++) {
-      let fromValue = parseFloat(objectsArray[i - 1].value); // Parse the value to ensure it's a number for accurate calculations
-      let toValue = parseFloat(objectsArray[i].value);
-      let currentChange = Math.abs(toValue - fromValue);
-      let percentageVariation = ((currentChange / fromValue) * 100).toFixed(2); // Calculate and format percentage variation
-      changes.push({
-        from: objectsArray[i - 1],
-        to: objectsArray[i],
-        change: currentChange.toFixed(2), // Keep two decimal places for change
-        percentageVariation // Already formatted to two decimal places
-      });
+      if (isSignificantDeviation(currentValue, nextValue, percentageChangeThreshold)) {
+        indexesToDelete.push(i); // Mark current index for deletion
+        console.log(
+          `Flagged for deletion in ${filePath}: Value ${currentValue} at ${objectsArray[i].timestamp} significantly deviates from the next value.`
+        );
+      }
     }
 
-    // Sort changes by the highest percentage variation and keep the top 10
-    let topChanges = changes.sort((a, b) => b.percentageVariation - a.percentageVariation).slice(0, 10);
-
-    console.log('Top 10 Variations:');
-    topChanges.forEach((change, index) => {
-      console.log(
-        `${index + 1}: From ${change.from.value.toFixed(2)} at ${change.from.timestamp} to ${change.to.value.toFixed(
-          2
-        )} at ${change.to.timestamp}, change: ${change.change}, % variation: ${change.percentageVariation}%`
-      );
-    });
-  });
+    if (shouldDelete) {
+      for (let i = indexesToDelete.length - 1; i >= 0; i--) {
+        objectsArray.splice(indexesToDelete[i], 1); // Remove the object
+        lines.splice(indexesToDelete[i] + 1, 1); // +1 to account for header line
+      }
+      const newData = lines.join('\n');
+      fs.writeFileSync(filePath, newData, 'utf8');
+      console.log(`Deleted ${originalLineCount - lines.length} significant deviations from ${filePath}`);
+    }
+  } catch (err) {
+    console.error('Error processing the file:', err);
+  }
 }
 
-debugPriceData(file);
+function debugPriceDataInDirectory(directoryPath, shouldDelete, filterString) {
+  try {
+    const files = fs.readdirSync(directoryPath).filter(file => file.includes(filterString));
+    for (const file of files) {
+      const filePath = path.join(directoryPath, file);
+      processFile(filePath, shouldDelete); // Process each file synchronously
+    }
+  } catch (err) {
+    console.error('Error reading the directory:', err);
+  }
+}
+
+// Invoke the ritual with the option to cleanse data of significant deviations
+// and focus on files containing a specified string
+debugPriceDataInDirectory(directoryPath, shouldDeleteLines, fileFilterString);

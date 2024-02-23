@@ -48,6 +48,8 @@ async function checkVolatility() {
 
 
 const writeFileAsync = promisify(fs.writeFile);
+const unlinkAsync = promisify(fs.unlink);
+const existsAsync = promisify(fs.exists);
 
 
 async function checkVolatilitiesAndLogMissingPairs(threshold) {
@@ -80,6 +82,7 @@ async function checkVolatilitiesAndLogMissingPairs(threshold) {
   // Write results to the specified output file
   if (results.length > 0) {
     try {
+      results.sort((a, b) => b.volatility - a.volatility);
       await writeFileAsync(outputPath, JSON.stringify(results, null, 2));
       console.log(`Volatility data written to ${outputPath}`);
     } catch (writeError) {
@@ -89,16 +92,26 @@ async function checkVolatilitiesAndLogMissingPairs(threshold) {
     console.log('No volatilities above threshold, no file written.');
   }
   
-  // Write missing pairs to the specified missing pairs file
-  if (missingPairs.length > 0) {
-    try {
-      await writeFileAsync(missingPairsPath, JSON.stringify(missingPairs, null, 2));
-      console.log(`Missing pairs data written to ${missingPairsPath}`);
-    } catch (writeError) {
-      console.error('Error writing missing pairs data to file:', writeError);
+  await writeFileAsync(outputPath, JSON.stringify(results, null, 2)).catch((error) => {
+    console.error('Error writing volatility data to file:', error);
+  });
+  console.log(`Volatility data written to ${outputPath}`);
+
+  // If no missing pairs, delete the existing missing pairs file if it exists
+  if (missingPairs.length === 0) {
+    const fileExists = await existsAsync(missingPairsPath);
+    if (fileExists) {
+      await unlinkAsync(missingPairsPath).catch((error) => {
+        console.error('Error deleting the missing pairs file:', error);
+      });
+      console.log(`${missingPairsPath} was deleted as there are no longer any missing pairs.`);
     }
   } else {
-    console.log('No missing pairs, no file written.');
+    // Write or update the missing pairs file if there are missing pairs
+    await writeFileAsync(missingPairsPath, JSON.stringify(missingPairs, null, 2)).catch((error) => {
+      console.error('Error writing missing pairs data to file:', error);
+    });
+    console.log(`Missing pairs data written to ${missingPairsPath}`);
   }
 }
 
