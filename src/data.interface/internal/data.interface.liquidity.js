@@ -54,7 +54,7 @@ function getSlippageMapForInterval(
 ) {
   // with jumps mean that we will try to add pivot routes (with WBTC, WETH and USDC as pivot)
   if (withJumps) {
-    if(fromSymbol == 'wBETH') {
+    if (fromSymbol == 'wBETH') {
       const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsFromWBETH(
         toSymbol,
         fromBlock,
@@ -63,7 +63,7 @@ function getSlippageMapForInterval(
         stepBlock
       );
       return liquidityDataWithJumps;
-    } else if(toSymbol == 'wBETH') {
+    } else if (toSymbol == 'wBETH') {
       const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsToWBETH(
         fromSymbol,
         fromBlock,
@@ -72,8 +72,7 @@ function getSlippageMapForInterval(
         stepBlock
       );
       return liquidityDataWithJumps;
-    }
-    else {
+    } else {
       const liquidityDataWithJumps = getSlippageMapForIntervalWithJumps(
         fromSymbol,
         toSymbol,
@@ -280,14 +279,7 @@ function getSlippageMapForIntervalWithJumpsFromWBETH(
   const liquidityData = {};
   // specific case, compute aggregated route ETH=>{toSymbol}
   // and then another round with wBETH=>Aggregated route computed before
-  const ethToSymbolData =  getSlippageMapForIntervalWithJumps(
-    'ETH',
-    toSymbol,
-    fromBlock,
-    toBlock,
-    platform,
-    stepBlock
-  );
+  const ethToSymbolData = getSlippageMapForIntervalWithJumps('ETH', toSymbol, fromBlock, toBlock, platform, stepBlock);
 
   // find direct liquidity wBETH=>ETH
   let wBETHETHData = getUnifiedDataForInterval(platform, 'wBETH', 'ETH', fromBlock, toBlock, stepBlock, []);
@@ -311,7 +303,6 @@ function getSlippageMapForIntervalWithJumpsFromWBETH(
       liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
     }
   }
-
 
   return liquidityData;
 }
@@ -359,7 +350,6 @@ function getSlippageMapForIntervalWithJumpsToWBETH(
       liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
     }
   }
-
 
   return liquidityData;
 }
@@ -564,7 +554,7 @@ function getLiquidityAccrossDexesFromWBETH(toSymbol, fromBlock, toBlock, stepBlo
       liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
     }
   }
-  
+
   return liquidityData;
 }
 
@@ -597,7 +587,6 @@ function getLiquidityAccrossDexesToWBETH(fromSymbol, fromBlock, toBlock, stepBlo
       liquidityData[blockNumber].slippageMap[slippageBps].quote = aggregVolume.quote;
     }
   }
-
 
   return liquidityData;
 }

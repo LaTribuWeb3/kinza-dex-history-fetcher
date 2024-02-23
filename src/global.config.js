@@ -292,7 +292,7 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: ['USDT', 'WBNB'],
       exportToInternalDashboard: true
-    },
+    }
   ],
   FDUSD: [
     {
@@ -326,7 +326,7 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
-    },
+    }
   ],
   lisUSD: [
     {

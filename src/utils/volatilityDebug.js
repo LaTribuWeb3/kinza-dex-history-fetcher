@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { DATA_DIR } = require('./constants');
 
-
 const directoryPath = path.join(DATA_DIR, 'precomputed', 'price', 'pancakeswapv3');
 const percentageChangeThreshold = 15; // Define the percentage change threshold
 const shouldDeleteLines = false; // Parameter to determine if lines should be deleted
@@ -23,7 +22,7 @@ function processFile(filePath, shouldDelete) {
       const [timestamp, value] = line.split(',');
       return {
         timestamp,
-        value: parseFloat(value),
+        value: parseFloat(value)
       };
     });
 
@@ -56,7 +55,7 @@ function processFile(filePath, shouldDelete) {
 
 function debugPriceDataInDirectory(directoryPath, shouldDelete, filterString) {
   try {
-    const files = fs.readdirSync(directoryPath).filter(file => file.includes(filterString));
+    const files = fs.readdirSync(directoryPath).filter((file) => file.includes(filterString));
     for (const file of files) {
       const filePath = path.join(directoryPath, file);
       processFile(filePath, shouldDelete); // Process each file synchronously

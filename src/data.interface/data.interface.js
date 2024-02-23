@@ -94,12 +94,11 @@ function getLiquidity(
  * @returns {{[blocknumber: number]: {price: number, slippageMap: {[slippageBps: number]: {base: number, quote: number}}}}}
  */
 function getLiquidityAll(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock = DEFAULT_STEP_BLOCK) {
-  if(fromSymbol == 'wBETH' && toSymbol != 'ETH') {
+  if (fromSymbol == 'wBETH' && toSymbol != 'ETH') {
     return getLiquidityAccrossDexesFromWBETH(toSymbol, fromBlock, toBlock, stepBlock);
-  } else if(fromSymbol != 'ETH' && toSymbol == 'wBETH') {
+  } else if (fromSymbol != 'ETH' && toSymbol == 'wBETH') {
     return getLiquidityAccrossDexesToWBETH(fromSymbol, fromBlock, toBlock, stepBlock);
-  } 
-  else {
+  } else {
     return getLiquidityAccrossDexes(fromSymbol, toSymbol, fromBlock, toBlock, stepBlock);
   }
 }
