@@ -122,25 +122,23 @@ async function computeSubMarket(base, quote) {
   const baseReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [baseConf.address]);
   // if wBETH/USDC, quoteReserveCaps is for USDC
   const quoteReserveCaps = await retry(protocolDataProviderContract.getReserveCaps, [quoteConf.address]);
-  const reserveDataConfigurationQuote = await retry(protocolDataProviderContract.getReserveConfigurationData, [
-    quoteTokenAddress
+  const reserveDataConfigurationBase = await retry(protocolDataProviderContract.getReserveConfigurationData, [
+    baseTokenAddress
   ]);
 
   const baseTokenInfo = await axios.get(
     'https://coins.llama.fi/prices/current/bsc:' + baseTokenAddress + ',bsc:' + quoteTokenAddress
   );
 
-  // const volatility = getRollingVolatility();
-
   let riskLevel = 0.0;
 
-  const liquidationBonusBps = reserveDataConfigurationQuote.liquidationBonus.toNumber() - 10000;
+  const liquidationBonusBps = reserveDataConfigurationBase.liquidationBonus.toNumber() - 10000;
 
   // Yaron: Ah, so technically the minimum between wBETH supply cap and USDC borrow cap
   const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
   const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
-  const ltvBps = reserveDataConfigurationQuote.ltv.toNumber();
+  const ltvBps = reserveDataConfigurationBase.ltv.toNumber();
 
   const currentBlock = (await web3Provider.getBlockNumber()) - 10;
   const blockNumberThirtyDaysAgo = currentBlock - 30 * BLOCK_PER_DAY; // Current block minus 30 days
@@ -168,9 +166,9 @@ async function computeSubMarket(base, quote) {
     riskLevel: riskLevel,
     LTV: ltvBps / 10000,
     liquidationBonus: liquidationBonusBps / 10000,
-    supplyCapUsd: baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price * baseReserveCaps.supplyCap.toNumber(),
+    supplyCapUsd: baseSupplyCapUSD,
     supplyCapInKind: baseReserveCaps.supplyCap.toNumber(),
-    borrowCapUsd: baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price * quoteReserveCaps.borrowCap.toNumber(),
+    borrowCapUsd: quoteBorrowCapUSD,
     borrowCapInKind: quoteReserveCaps.borrowCap.toNumber(),
     volatility: selectedVolatility,
     liquidity: liquidity
