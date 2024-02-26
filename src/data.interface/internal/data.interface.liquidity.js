@@ -54,7 +54,7 @@ function getSlippageMapForInterval(
 ) {
   // with jumps mean that we will try to add pivot routes (with WBTC, WETH and USDC as pivot)
   if (withJumps) {
-    if (fromSymbol == 'wBETH') {
+    if (fromSymbol == 'wBETH' && toSymbol != 'ETH') {
       const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsFromWBETH(
         toSymbol,
         fromBlock,
@@ -63,7 +63,7 @@ function getSlippageMapForInterval(
         stepBlock
       );
       return liquidityDataWithJumps;
-    } else if (toSymbol == 'wBETH') {
+    } else if (fromSymbol != 'ETH' && toSymbol == 'wBETH') {
       const liquidityDataWithJumps = getSlippageMapForIntervalWithJumpsToWBETH(
         fromSymbol,
         fromBlock,
