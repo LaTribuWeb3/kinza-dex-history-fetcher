@@ -71,7 +71,6 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
-    'slisBNB',
     'FDUSD'
   ],
   FDUSD: [
