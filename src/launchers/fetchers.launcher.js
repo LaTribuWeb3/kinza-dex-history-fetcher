@@ -1,4 +1,4 @@
-const { fnName, roundTo, sleep } = require('../utils/utils');
+const { fnName, roundTo, sleep, purgeEmptyCSVs } = require('../utils/utils');
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -11,6 +11,7 @@ const { wombatHistoryFetcher } = require('../wombat/wombat.history.fetcher');
 const { wombatPriceHistoryFetcher } = require('../wombat/wombat.price.history.fetcher');
 const { pancakeHistoryFetcher } = require('../pancake.stable/pancake.history.fetcher');
 const { pancakePriceHistoryFetcher } = require('../pancake.stable/pancake.price.history.fetcher');
+const { DATA_DIR } = require('../utils/constants');
 
 const RUN_EVERY_MINUTES = 60;
 
@@ -37,6 +38,10 @@ async function LaunchFetchers() {
         console.log(`${fct.name} ended`);
         console.log('------------------------------------------------------------');
       }
+
+      // in the end, purge empty cvs
+      purgeEmptyCSVs(DATA_DIR);
+      
       UpdateSyncFile(SYNC_FILENAMES.FETCHERS_LAUNCHER, false);
     } catch (error) {
       const errorMsg = `An exception occurred: ${error}`;

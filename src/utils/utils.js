@@ -207,7 +207,7 @@ function purgeEmptyCSVs(directory) {
         .split('\n')
         .filter((line) => line.trim() !== '');
       if (lines.length <= 1) {
-        fs.unlinkSync(fullPath);
+        fs.rmSync(fullPath);
         console.log(`Deleted: ${fullPath}`);
       }
     }

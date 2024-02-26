@@ -134,7 +134,6 @@ async function computeSubMarket(base, quote) {
 
   const liquidationBonusBps = reserveDataConfigurationBase.liquidationBonus.toNumber() - 10000;
 
-  // Yaron: Ah, so technically the minimum between wBETH supply cap and USDC borrow cap
   const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
   const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
