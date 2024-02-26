@@ -58,6 +58,14 @@ async function precomputeRiskLevelKinza(onlyOnce = false) {
       const stringified = JSON.stringify(kinzaOverview, null, 2);
       console.log(stringified);
       fs.writeFileSync(path.join(dirPath, 'kinza-overview.json'), stringified);
+
+      const runEndDate = Math.round(Date.now() / 1000);
+      await RecordMonitoring({
+        name: MONITORING_NAME,
+        status: 'success',
+        lastEnd: runEndDate,
+        lastDuration: runEndDate - Math.round(runStartDate / 1000)
+      });
     } catch (error) {
       console.error(error);
       const errorMsg = `An exception occurred: ${error}`;
@@ -68,14 +76,6 @@ async function precomputeRiskLevelKinza(onlyOnce = false) {
         error: errorMsg
       });
     }
-
-    const runEndDate = Math.round(Date.now() / 1000);
-    await RecordMonitoring({
-      name: MONITORING_NAME,
-      status: 'success',
-      lastEnd: runEndDate,
-      lastDuration: runEndDate - Math.round(runStartDate / 1000)
-    });
 
     if (onlyOnce) {
       return;
