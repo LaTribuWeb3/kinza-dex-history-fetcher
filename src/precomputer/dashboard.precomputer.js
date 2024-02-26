@@ -53,10 +53,7 @@ async function PrecomputeDashboardData() {
         runEvery: RUN_EVERY_MINUTES * 60
       });
 
-      purgeEmptyCSVs(DATA_DIR);
-
       const currentBlock = (await web3Provider.getBlockNumber()) - 100;
-
       // this will be the start of the graph
       const daysAgo = Math.round(Date.now() / 1000) - NB_DAYS * 24 * 60 * 60;
       console.log('daysAgo:', new Date(daysAgo * 1000));
