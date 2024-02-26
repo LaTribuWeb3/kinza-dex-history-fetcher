@@ -300,7 +300,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: ['WBNB'],
+      pivots: ['USDT', 'WBNB'],
       exportToInternalDashboard: true
     }
   ],
@@ -355,18 +355,6 @@ const watchedPairs = {
       exportToInternalDashboard: true
     }
   ],
-  slisBNB: [
-    {
-      quote: 'USDT',
-      pivots: ['WBNB'],
-      exportToInternalDashboard: true
-    },
-    {
-      quote: 'USDC',
-      pivots: ['WBNB'],
-      exportToInternalDashboard: true
-    }
-  ]
 };
 
 const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'TUSD', 'slisBNB'];
