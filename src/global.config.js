@@ -339,7 +339,7 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
-      pivots: ['WBNB'],
+      pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
     }
   ],
