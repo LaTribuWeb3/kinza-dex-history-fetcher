@@ -112,6 +112,11 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: undefined,
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
   BTCB: [
@@ -292,6 +297,11 @@ const watchedPairs = {
       quote: 'SnBNB',
       pivots: ['USDT', 'WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: ['WBNB'],
+      exportToInternalDashboard: true
     }
   ],
   FDUSD: [
@@ -325,6 +335,11 @@ const watchedPairs = {
     {
       quote: 'SnBNB',
       pivots: ['ETH', 'WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'slisBNB',
+      pivots: ['WBNB'],
       exportToInternalDashboard: true
     }
   ],
