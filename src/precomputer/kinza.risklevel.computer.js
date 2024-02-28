@@ -170,7 +170,9 @@ async function computeSubMarket(base, quote) {
     borrowCapUsd: quoteBorrowCapUSD,
     borrowCapInKind: quoteReserveCaps.borrowCap.toNumber(),
     volatility: selectedVolatility,
-    liquidity: liquidity
+    liquidity: liquidity,
+    basePrice: baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price,
+    quotePrice: baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price
   };
 
   console.log(`computeSubMarket[${base}/${quote}]: result:`, pairValue);
