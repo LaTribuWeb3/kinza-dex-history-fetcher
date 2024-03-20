@@ -413,26 +413,27 @@ const USDTTUSDSlippageMap = {
 // console.log(computeAggregate3(wBETHETHSlippageMap[700], ETHUSDTSlippageMap[50], USDTTUSDSlippageMap[50])); // 0.5 0.5 7
 
 function test() {
-  const result1 = computeAggregatedVolumeFromPivot3(wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap);
-  const segments = [wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap];
-  const result2 = computeAggregatedVolume(segments);
-  console.log(result1);
-  console.log(result2);
+  // const result1 = computeAggregatedVolumeFromPivot3(wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap);
+  // const segments = [wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap];
+  // const result2 = computeAggregatedVolume(segments);
+  // console.log(result1);
+  // console.log(result2);
 
   
-  for(let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
-    console.log('segmentBefore', segment);
-    for(const slippageBps of Object.keys(segment)) {
-      segment[slippageBps].base = Math.max(0, segment[slippageBps].base - result2.usedForSegments[i].base);
-      segment[slippageBps].quote = Math.max(0, segment[slippageBps].quote - result2.usedForSegments[i].quote);
-    }
+  // for(let i = 0; i < segments.length; i++) {
+  //   const segment = segments[i];
+  //   console.log('segmentBefore', segment);
+  //   for(const slippageBps of Object.keys(segment)) {
+  //     segment[slippageBps].base = Math.max(0, segment[slippageBps].base - result2.usedForSegments[i].base);
+  //     segment[slippageBps].quote = Math.max(0, segment[slippageBps].quote - result2.usedForSegments[i].quote);
+  //   }
 
-    console.log('segmentAfter', segment);
+  //   console.log('segmentAfter', segment);
 
-  }
+  // }
 
-
+  const routes = generateAllRoutes('wstETH', 'PEPE', ['DAI', 'USDT', 'USDC', 'WETH', 'WBTC'], 2);
+  console.log(routes);
 }
 
 test();
@@ -454,6 +455,43 @@ function generateAllOptions(jumpSize, theSum, numVars) {
     }
   }
   return result;
+}
+
+function generateAllRoutes(base, quote, pivots, maxJumps) {
+  let allRoutes = [];
+
+  // Ensure pivots are unique and exclude base and quote
+  let uniquePivots = [...new Set(pivots.filter(pivot => pivot !== base && pivot !== quote))];
+
+  // Generate routes with 0 jumps (direct route, if allowed)
+  if (maxJumps >= 0) {
+    allRoutes.push([base, quote]);
+  }
+
+  // Helper function to build routes
+  function buildRoutes(currentRoute, availablePivots, jumpsRemaining) {
+    if (jumpsRemaining === 0) {
+      allRoutes.push(currentRoute.concat(quote));
+      return;
+    }
+
+    availablePivots.forEach((pivot, index) => {
+      // Skip pivot if it's already in the route
+      if (!currentRoute.includes(pivot)) {
+        // Build next route with current pivot and reduce available pivots
+        let nextRoute = currentRoute.concat(pivot);
+        let nextAvailablePivots = availablePivots.slice(0, index).concat(availablePivots.slice(index + 1));
+        buildRoutes(nextRoute, nextAvailablePivots, jumpsRemaining - 1);
+      }
+    });
+  }
+
+  // Generate routes for each possible jump count up to maxJumps
+  for (let jumps = 1; jumps <= maxJumps; jumps++) {
+    buildRoutes([base], uniquePivots, jumps);
+  }
+
+  return allRoutes;
 }
 
 module.exports = { computeAggregatedVolumeFromPivot };
