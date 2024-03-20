@@ -84,6 +84,34 @@ function computeAggregatedVolumeFromPivot3(segment1SlippageMap, segment2Slippage
   return { base: maxBase, quote };
 }
 
+function computeAggregatedVolume(segments) {
+  let maxBase = 0;
+  let quote = 0;
+  let selectedOptions = [];
+  let usedForSegments = [];
+
+  const allOptions = generateAllOptions(50, 800, segments.length);
+  for (const options of allOptions) {
+
+    const segmentsData = [];
+    for(let i = 0; i < segments.length; i++) {
+      segmentsData.push(segments[i][options[i]]);
+    }
+
+    const data = computeAggregate(segmentsData);
+
+    if (data.base > maxBase) {
+      selectedOptions = options;
+      maxBase = data.base;
+      quote = data.quote;
+      usedForSegments = data.usedForSegments;
+    }
+  }
+
+  console.log(`Best options: ${selectedOptions}`);
+  return { base: maxBase, quote, usedForSegments };
+}
+
 /**
  * Compute the aggregated volume from 3 segments
  * Example wBETH->ETH + ETH->USDT + USDT->TUSD
@@ -125,6 +153,57 @@ function computeAggregate3(segment1Data, segment2Data, segment3Data) {
   const baseUsed = segment1Data.base * baseUtilization;
 
   return { base: baseUsed, quote: quote3Obtained };
+}
+
+/**
+ * Compute the aggregated volume from 3 segments
+ * Example wBETH->ETH + ETH->USDT + USDT->TUSD
+ * @param {{base: number, quote: number}[]} segments
+ * @returns {{base: number, quote: number}}
+ */
+function computeAggregate(segments) {
+  let baseUtilization = 1; // Start with 100% utilization
+  let previousQuote = 0;
+  let rate = 0;
+  let cumulativeRate = 0;
+
+  const usedForSegments = [];
+  // Iterate over each segment, calculating rates and utilizations as needed
+  for(let index = 0; index < segments.length; index++) {
+    const segment = segments[index];
+    if (index === 0) {
+      rate = segment.quote / segment.base;
+      cumulativeRate = rate;
+      previousQuote = segment.base * rate;
+      usedForSegments[index] = { base: segment.base, quote: segment.quote};
+    } else {
+      rate = segment.quote / segment.base;
+      cumulativeRate *= rate;
+      // Compute base utilization if the previous segment's quote exceeds the current segment's base
+      // it means we don't fully use the availabe liquidity so we need to down the amount used
+      if (previousQuote > segment.base) {
+        const currentBaseUtilization = segment.base / previousQuote;
+        baseUtilization *= currentBaseUtilization;
+        previousQuote = segment.base * rate;
+        for(let i = 0; i < index; i++) {
+          usedForSegments[i].base *= currentBaseUtilization;
+          usedForSegments[i].quote *= currentBaseUtilization;
+        }
+        usedForSegments[index] = { base: segment.base, quote: segment.quote};
+      } else {
+        previousQuote = previousQuote * rate;
+        usedForSegments[index] = { base: segment.base, quote: segment.quote};
+      }
+    }
+  }
+
+  // Calculate the base used and the final quote obtained
+  const firstSegment = segments[0];
+  // const lastRate = segments[segments.length - 1].quote / segments[segments.length - 1].base;
+  const baseUsed = firstSegment.base * baseUtilization;
+  const quoteObtained = baseUsed * cumulativeRate;
+
+  return { base: baseUsed, quote: quoteObtained, usedForSegments };
 }
 
 const wBETHETHSlippageMap = {
@@ -333,6 +412,30 @@ const USDTTUSDSlippageMap = {
 // console.log(computeAggregate3(wBETHETHSlippageMap[50], ETHUSDTSlippageMap[550], USDTTUSDSlippageMap[200])); // 0.5 0.5 7
 // console.log(computeAggregate3(wBETHETHSlippageMap[700], ETHUSDTSlippageMap[50], USDTTUSDSlippageMap[50])); // 0.5 0.5 7
 
+function test() {
+  const result1 = computeAggregatedVolumeFromPivot3(wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap);
+  const segments = [wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap];
+  const result2 = computeAggregatedVolume(segments);
+  console.log(result1);
+  console.log(result2);
+
+  
+  for(let i = 0; i < segments.length; i++) {
+    const segment = segments[i];
+    console.log('segmentBefore', segment);
+    for(const slippageBps of Object.keys(segment)) {
+      segment[slippageBps].base = Math.max(0, segment[slippageBps].base - result2.usedForSegments[i].base);
+      segment[slippageBps].quote = Math.max(0, segment[slippageBps].quote - result2.usedForSegments[i].quote);
+    }
+
+    console.log('segmentAfter', segment);
+
+  }
+
+
+}
+
+test();
 // computeAggregatedVolumeFromPivot3(wBETHETHSlippageMap, ETHUSDTSlippageMap, USDTTUSDSlippageMap);
 
 function generateAllOptions(jumpSize, theSum, numVars) {
