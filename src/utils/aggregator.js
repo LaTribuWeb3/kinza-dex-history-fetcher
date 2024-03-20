@@ -432,8 +432,13 @@ function test() {
 
   // }
 
-  const routes = generateAllRoutes('wstETH', 'PEPE', ['DAI', 'USDT', 'USDC', 'WETH', 'WBTC'], 2);
-  console.log(routes);
+  const pivots = ['DAI', 'USDT', 'USDC', 'WETH', 'WBTC'];
+  const permutations = generatePermutations(pivots);
+  console.log(permutations);
+  for(const permutation of permutations) {
+    const routes = generateAllRoutes('wstETH', 'rETH', permutation, 2);
+    console.log(routes);
+  }
 }
 
 test();
@@ -492,6 +497,33 @@ function generateAllRoutes(base, quote, pivots, maxJumps) {
   }
 
   return allRoutes;
+}
+
+function generatePermutations(array) {
+  let result = [];
+
+  // Helper function to swap array elements
+  function swap(arr, i, j) {
+    let temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+
+  // Recursive function to generate permutations
+  function permute(arr, startIndex, endIndex) {
+    if (startIndex === endIndex) {
+      result.push(arr.slice()); // Use slice to clone the array
+    } else {
+      for (let i = startIndex; i <= endIndex; i++) {
+        swap(arr, startIndex, i); // Swap current element with start
+        permute(arr, startIndex + 1, endIndex); // Generate all permutations for the rest
+        swap(arr, startIndex, i); // Backtrack to previous state
+      }
+    }
+  }
+
+  permute(array, 0, array.length - 1);
+  return result;
 }
 
 module.exports = { computeAggregatedVolumeFromPivot };
