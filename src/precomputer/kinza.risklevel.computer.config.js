@@ -3,7 +3,7 @@ const protocolDataProviderAddress = '0x09Ddc4AE826601b0F9671b9edffDf75e7E6f5D61'
 const pairsToCompute = {
   USDC: [
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'BTCB',
     'ETH',
     'WBNB',
@@ -13,7 +13,7 @@ const pairsToCompute = {
     'FDUSD'
   ],
   USDT: ['USDC'],
-  TUSD: ['USDC', 'USDT'],
+  // TUSD: ['USDC', 'USDT'],
   BTCB: [
     'USDC',
     'USDT',
@@ -28,7 +28,7 @@ const pairsToCompute = {
   ETH: [
     'USDC',
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'BTCB',
     'WBNB',
     'wBETH',
@@ -39,7 +39,7 @@ const pairsToCompute = {
   WBNB: [
     'USDC',
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'BTCB',
     'ETH',
     'wBETH',
@@ -50,7 +50,7 @@ const pairsToCompute = {
   wBETH: [
     'USDC',
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'BTCB',
     'ETH',
     'WBNB',
@@ -76,7 +76,7 @@ const pairsToCompute = {
   FDUSD: [
     'USDC',
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'BTCB',
     'ETH',
     'WBNB',
