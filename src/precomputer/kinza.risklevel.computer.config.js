@@ -17,7 +17,7 @@ const pairsToCompute = {
   BTCB: [
     'USDC',
     'USDT',
-    'TUSD',
+    // 'TUSD',
     'ETH',
     'WBNB',
     'wBETH',
