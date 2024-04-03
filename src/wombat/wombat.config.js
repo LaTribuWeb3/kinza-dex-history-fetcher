@@ -936,7 +936,7 @@ const wombatPools = [
     ]
   },
   {
-    poolName: 'ETH-wBETH',
+    poolName: 'DynamicPoolEthWbeth',
     poolAddress: '0x8b892b6Ea1d0e5B29b719d6Bd6eb9354f1cDE060',
     poolAbi: DynamicPoolV2Abi,
     tokens: [
