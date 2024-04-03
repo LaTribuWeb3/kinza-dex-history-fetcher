@@ -896,7 +896,7 @@ const wombatAbis = {
       stateMutability: 'view',
       type: 'function'
     }
-  ]
+  ],
 };
 
 const pancakeswapV2Abis = {};
