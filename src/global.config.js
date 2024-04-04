@@ -347,4 +347,6 @@ const watchedPairs = {
 
 const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH'];
 
-module.exports = { tokens, watchedPairs, pairsToFetch };
+const newAssetsForMinVolatility = [ 'ezETH' ];
+
+module.exports = { tokens, watchedPairs, pairsToFetch, newAssetsForMinVolatility };
