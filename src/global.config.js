@@ -58,7 +58,12 @@ const tokens = {
     decimals: 18,
     address: '0xB0b84D294e0C75A6abe60171b70edEb2EFd14A1B',
     dustAmount: 0.001
-  }
+  },
+  ezETH : {
+    decimals: 18,
+    address: '0x2416092f143378750bb29b79eD961ab195CcEea5',
+    dustAmount: 0.00001
+  },
 };
 // goes both ways
 const watchedPairs = {
@@ -107,7 +112,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: undefined,
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   BTCB: [
     {
@@ -149,7 +159,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   USDC: [
     {
@@ -186,7 +201,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   ETH: [
     {
@@ -218,7 +238,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   USDT: [
     {
@@ -245,7 +270,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   FDUSD: [
     {
@@ -267,7 +297,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   wBETH: [
     {
@@ -284,7 +319,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   lisUSD: [
     {
@@ -296,10 +336,15 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'ezETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH'];
 
 module.exports = { tokens, watchedPairs, pairsToFetch };
