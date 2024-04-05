@@ -6,8 +6,7 @@ const {
   sleep,
   logFnDurationWithLabel,
   logFnDuration,
-  retry,
-  purgeEmptyCSVs
+  retry
 } = require('../utils/utils');
 const { DATA_DIR, PLATFORMS } = require('../utils/constants');
 
@@ -37,9 +36,6 @@ async function PrecomputeDashboardData() {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     await WaitUntilDone(SYNC_FILENAMES.FETCHERS_LAUNCHER);
-
-    // compute risk levels
-    await precomputeRiskLevelKinza(true);
 
     const runStartDate = Date.now();
     console.log({ TARGET_DATA_POINTS });
@@ -187,6 +183,10 @@ async function PrecomputeDashboardData() {
         lastEnd: runEndDate,
         lastDuration: runEndDate - Math.round(runStartDate / 1000)
       });
+
+      
+      // compute risk levels
+      await precomputeRiskLevelKinza(true);
 
       logFnDuration(runStartDate, pairsToCompute.length, 'pairs to compute');
       const sleepTime = RUN_EVERY_MINUTES * 60 * 1000 - (Date.now() - runStartDate);

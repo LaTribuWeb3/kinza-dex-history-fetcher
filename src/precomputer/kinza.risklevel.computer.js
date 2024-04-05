@@ -5,12 +5,10 @@ const { RecordMonitoring } = require('../utils/monitoring');
 const { pairsToCompute } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderAddress } = require('./kinza.risklevel.computer.config');
 const { protocolDataProviderABI } = require('./kinza.risklevel.computer.config');
-const { getRollingVolatility, getLiquidityAll } = require('../data.interface/data.interface');
 const path = require('path');
-const { DATA_DIR, BLOCK_PER_DAY } = require('../utils/constants');
+const { DATA_DIR } = require('../utils/constants');
 const fs = require('fs');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
-const { computeAverageSlippageMap } = require('../data.interface/internal/data.interface.liquidity');
 const { getConfTokenBySymbol } = require('../utils/token.utils');
 
 const RPC_URL = process.env.RPC_URL;
@@ -139,20 +137,11 @@ async function computeSubMarket(base, quote) {
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
   const ltvBps = reserveDataConfigurationBase.ltv.toNumber();
 
-  const currentBlock = (await web3Provider.getBlockNumber()) - 10;
-  const blockNumberThirtyDaysAgo = currentBlock - 30 * BLOCK_PER_DAY; // Current block minus 30 days
-  const fullLiquidity = getLiquidityAll(base, quote, blockNumberThirtyDaysAgo, currentBlock);
-  const averageLiquidityOn30Days = computeAverageSlippageMap(fullLiquidity);
+  const {volatility, liquidityInKind} = getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonusBps);
 
-  const volatility = await getRollingVolatility('all', base, quote, web3Provider);
-
-  if (!volatility) {
-    throw new Error(`Cannot find volatility for ${base}/${quote}`);
-  }
-
-  const liquidity = averageLiquidityOn30Days.slippageMap[liquidationBonusBps].base;
+  const liquidity = liquidityInKind;
   const liquidityUsd = liquidity * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
-  const selectedVolatility = volatility.latest.current;
+  const selectedVolatility = volatility;
   riskLevel = findRiskLevelFromParameters(
     selectedVolatility,
     liquidityUsd,
@@ -177,6 +166,24 @@ async function computeSubMarket(base, quote) {
 
   console.log(`computeSubMarket[${base}/${quote}]: result:`, pairValue);
   return pairValue;
+}
+
+/**
+ * 
+ * @param {string} base 
+ * @param {string} quote 
+ * @param {number} liquidationBonusBPS 
+ * @returns {{volatility: number, liquidityInKind: number}}
+ */
+function getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonusBPS) {
+  const filePath = path.join(DATA_DIR, 'precomputed', 'dashboard', 'pairs', `${base}-${quote}-all.json`);
+  const dashboardData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const dataKeys = Object.keys(dashboardData.liquidity);
+  const latestKey = dataKeys[dataKeys.length - 1];
+  const liquidityData = dashboardData.liquidity[latestKey];
+  const volatilityData = liquidityData.volatility;
+  const slippageMap = liquidityData.avgSlippageMap;
+  return {volatility: volatilityData, liquidityInKind: slippageMap[liquidationBonusBPS].base};
 }
 
 function findRiskLevelFromParameters(
