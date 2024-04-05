@@ -15,7 +15,7 @@ const RPC_URL = process.env.RPC_URL;
 
 const runnerName = 'pancake Price Fetcher';
 const runEverySec = 60 * 60;
-pancakePriceHistoryFetcher(true);
+// pancakePriceHistoryFetcher(true);
 /**
  * the main entrypoint of the script, will run the fetch against all pool in the config
  */
@@ -24,12 +24,12 @@ async function pancakePriceHistoryFetcher(onlyOnce = false) {
   while (true) {
     const start = Date.now();
     try {
-      // await RecordMonitoring({
-      //     'name': runnerName,
-      //     'status': 'running',
-      //     'lastStart': Math.round(start/1000),
-      //     'runEvery': runEverySec
-      // });
+      await RecordMonitoring({
+        'name': runnerName,
+        'status': 'running',
+        'lastStart': Math.round(start/1000),
+        'runEvery': runEverySec
+      });
 
       if (!fs.existsSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake'))) {
         fs.mkdirSync(path.join(DATA_DIR, 'precomputed', 'price', 'pancake'), { recursive: true });
@@ -43,13 +43,13 @@ async function pancakePriceHistoryFetcher(onlyOnce = false) {
       }
 
       const runEndDate = Math.round(Date.now() / 1000);
-      // await RecordMonitoring({
-      //     'name': runnerName,
-      //     'status': 'success',
-      //     'lastEnd': runEndDate,
-      //     'lastDuration': runEndDate - Math.round(start/1000),
-      //     'lastBlockFetched': currentBlock
-      // });
+      await RecordMonitoring({
+        'name': runnerName,
+        'status': 'success',
+        'lastEnd': runEndDate,
+        'lastDuration': runEndDate - Math.round(start/1000),
+        'lastBlockFetched': currentBlock
+      });
     } catch (error) {
       const errorMsg = `An exception occurred: ${error}`;
       console.log(errorMsg);
