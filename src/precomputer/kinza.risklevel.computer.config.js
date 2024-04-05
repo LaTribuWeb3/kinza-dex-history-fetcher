@@ -27,7 +27,8 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
-    'FDUSD'
+    'FDUSD',
+    'ezETH'
   ],
   WBNB: [
     'USDC',
@@ -59,7 +60,10 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
-  ]
+  ],
+  ezETH: [
+    'ETH',
+  ],
 };
 
 const protocolDataProviderABI = [

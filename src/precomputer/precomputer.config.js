@@ -1,5 +1,5 @@
 const pairsToCompute = {
-  WETH: ['USDC', 'WBTC'],
+  WETH: ['USDC', 'WBTC', 'ezETH'],
   DAI: ['WETH', 'USDC', 'WBTC'],
   MANA: ['WETH', 'USDC', 'WBTC'],
   MKR: ['WETH', 'USDC', 'WBTC'],
@@ -8,7 +8,8 @@ const pairsToCompute = {
   UNI: ['WETH', 'USDC', 'WBTC'],
   USDC: ['WETH', 'WBTC'],
   USDT: ['WETH', 'USDC', 'WBTC'],
-  WBTC: ['USDC', 'WETH']
+  WBTC: ['USDC', 'WETH'],
+  ezETH: ['WETH']
 };
 
 const riskDataConfig = [

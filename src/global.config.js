@@ -113,11 +113,6 @@ const watchedPairs = {
       pivots: undefined,
       exportToInternalDashboard: true
     },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
-      exportToInternalDashboard: true
-    },
   ],
   BTCB: [
     {
@@ -160,11 +155,6 @@ const watchedPairs = {
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
-      exportToInternalDashboard: true
-    },
   ],
   USDC: [
     {
@@ -200,11 +190,6 @@ const watchedPairs = {
     {
       quote: 'slisBNB',
       pivots: ['WBNB'],
-      exportToInternalDashboard: true
-    },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
       exportToInternalDashboard: true
     },
   ],
@@ -271,11 +256,6 @@ const watchedPairs = {
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
-      exportToInternalDashboard: true
-    },
   ],
   FDUSD: [
     {
@@ -298,11 +278,6 @@ const watchedPairs = {
       pivots: ['WBNB'],
       exportToInternalDashboard: true
     },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
-      exportToInternalDashboard: true
-    },
   ],
   wBETH: [
     {
@@ -320,11 +295,6 @@ const watchedPairs = {
       pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
     },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
-      exportToInternalDashboard: true
-    },
   ],
   lisUSD: [
     {
@@ -335,11 +305,6 @@ const watchedPairs = {
     {
       quote: 'slisBNB',
       pivots: ['WBNB'],
-      exportToInternalDashboard: true
-    },
-    {
-      quote: 'ezETH',
-      pivots: undefined,
       exportToInternalDashboard: true
     },
   ],
