@@ -13,7 +13,7 @@ const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
 dotenv.config();
 const RPC_URL = process.env.RPC_URL;
 
-const runnerName = 'pancake Price Fetcher';
+const runnerName = 'Pancake Stable Price Fetcher';
 const runEverySec = 60 * 60;
 // pancakePriceHistoryFetcher(true);
 /**
