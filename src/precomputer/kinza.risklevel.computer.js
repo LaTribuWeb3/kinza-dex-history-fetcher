@@ -183,7 +183,7 @@ function getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonu
   const liquidityData = dashboardData.liquidity[latestKey];
   const volatilityData = liquidityData.volatility;
   const slippageMap = liquidityData.avgSlippageMap;
-  return {volatility: volatilityData, liquidityInKind: slippageMap[liquidationBonusBPS].base};
+  return {volatility: volatilityData, liquidityInKind: slippageMap[liquidationBonusBPS]};
 }
 
 function findRiskLevelFromParameters(

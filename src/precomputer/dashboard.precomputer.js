@@ -14,7 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const { getBlocknumberForTimestamp } = require('../utils/web3.utils');
 const { getLiquidity, getRollingVolatility, getLiquidityAll } = require('../data.interface/data.interface');
-const { getDefaultSlippageMap } = require('../data.interface/internal/data.interface.utils');
+const { getDefaultSlippageMap, getDefaultSlippageMapSimple } = require('../data.interface/internal/data.interface.utils');
 const { median } = require('simple-statistics');
 const { watchedPairs } = require('../global.config');
 const { WaitUntilDone, SYNC_FILENAMES } = require('../utils/sync');
@@ -269,17 +269,16 @@ function generateDashboardDataFromLiquidityData(
     const startBlockForAvg = block - avgStep;
     // average for all blocks in interval [startBlockForAvg -> block]
     const blocksToAverage = liquidityBlocks.filter((_) => _ <= block && _ >= startBlockForAvg);
-    const avgSlippage = getDefaultSlippageMap();
+    const avgSlippage = getDefaultSlippageMapSimple();
     for (const blockToAvg of blocksToAverage) {
       for (const slippageBps of Object.keys(avgSlippage)) {
-        avgSlippage[slippageBps].base += platformLiquidity[blockToAvg].slippageMap[slippageBps].base;
-        avgSlippage[slippageBps].quote += platformLiquidity[blockToAvg].slippageMap[slippageBps].quote;
+        avgSlippage[slippageBps] += platformLiquidity[blockToAvg].slippageMap[slippageBps].base;
+        // avgSlippage[slippageBps].quote += platformLiquidity[blockToAvg].slippageMap[slippageBps].quote;
       }
     }
 
     for (const slippageBps of Object.keys(avgSlippage)) {
-      avgSlippage[slippageBps].base = avgSlippage[slippageBps].base / blocksToAverage.length;
-      avgSlippage[slippageBps].quote = avgSlippage[slippageBps].quote / blocksToAverage.length;
+      avgSlippage[slippageBps] = avgSlippage[slippageBps] / blocksToAverage.length;
     }
 
     // const parkinsonsVolatility = computeParkinsonVolatility(pricesAtBlock, pair.base, pair.quote, startBlockForAvg, block, NB_DAYS_AVG);
