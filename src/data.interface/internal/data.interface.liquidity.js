@@ -725,5 +725,6 @@ module.exports = {
   getLiquidityAccrossDexes,
   getLiquidityAccrossDexesFromWBETH,
   getLiquidityAccrossDexesToWBETH,
-  computeAverageSlippageMap
+  computeAverageSlippageMap,
+  getSumSlippageMapAcrossDexes
 };
