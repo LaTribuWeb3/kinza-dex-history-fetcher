@@ -135,7 +135,7 @@ async function computeSubMarket(base, quote) {
   const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
   const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
-  const ltvBps = reserveDataConfigurationBase.ltv.toNumber();
+  const liquidationThresholdBps = reserveDataConfigurationBase.liquidationThreshold.toNumber();
 
   const {volatility, liquidityInKind} = getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonusBps);
 
@@ -146,13 +146,13 @@ async function computeSubMarket(base, quote) {
     selectedVolatility,
     liquidityUsd,
     liquidationBonusBps / 10000,
-    ltvBps / 10000,
+    liquidationThresholdBps / 10000,
     capToUseUsd
   );
   const pairValue = {
     quote: quote,
     riskLevel: riskLevel,
-    LTV: ltvBps / 10000,
+    LTV: liquidationThresholdBps / 10000,
     liquidationBonus: liquidationBonusBps / 10000,
     supplyCapUsd: baseSupplyCapUSD,
     supplyCapInKind: baseReserveCaps.supplyCap.toNumber(),
