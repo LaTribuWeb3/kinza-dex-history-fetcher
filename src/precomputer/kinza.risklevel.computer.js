@@ -153,7 +153,7 @@ async function computeSubMarket(base, quote) {
   const pairValue = {
     quote: quote,
     riskLevel: riskLevel,
-    liquidationThresholdBps: liquidationThresholdBps / 10000,
+    liquidationThreshold: liquidationThresholdBps / 10000,
     LTV: ltvBps / 10000,
     liquidationBonus: liquidationBonusBps / 10000,
     supplyCapUsd: baseSupplyCapUSD,
