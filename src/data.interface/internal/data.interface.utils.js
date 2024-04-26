@@ -305,7 +305,7 @@ function getUnifiedDataForInterval(
   stepBlock = DEFAULT_STEP_BLOCK,
   alreadyUsedPools
 ) {
-  if (platform == 'wombat' || platform == 'pancake') {
+  if (platform == 'wombat' || platform == 'pancake' || platform == 'curve') {
     return getUnifiedDataForIntervalForWombatOrPancake(
       platform,
       fromSymbol,
