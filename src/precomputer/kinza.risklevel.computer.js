@@ -135,9 +135,10 @@ async function computeSubMarket(base, quote) {
   const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
   const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
+  const liquidationThresholdBps = reserveDataConfigurationBase.liquidationThreshold.toNumber();
   const ltvBps = reserveDataConfigurationBase.ltv.toNumber();
 
-  const {volatility, liquidityInKind} = getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonusBps);
+  const { volatility, liquidityInKind } = getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonusBps);
 
   const liquidity = liquidityInKind;
   const liquidityUsd = liquidity * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
@@ -146,12 +147,13 @@ async function computeSubMarket(base, quote) {
     selectedVolatility,
     liquidityUsd,
     liquidationBonusBps / 10000,
-    ltvBps / 10000,
+    liquidationThresholdBps / 10000,
     capToUseUsd
   );
   const pairValue = {
     quote: quote,
     riskLevel: riskLevel,
+    liquidationThreshold: liquidationThresholdBps / 10000,
     LTV: ltvBps / 10000,
     liquidationBonus: liquidationBonusBps / 10000,
     supplyCapUsd: baseSupplyCapUSD,
@@ -183,7 +185,7 @@ function getLiquidityAndVolatilityFromDashboardData(base, quote, liquidationBonu
   const liquidityData = dashboardData.liquidity[latestKey];
   const volatilityData = liquidityData.volatility;
   const slippageMap = liquidityData.avgSlippageMap;
-  return {volatility: volatilityData, liquidityInKind: slippageMap[liquidationBonusBPS]};
+  return { volatility: volatilityData, liquidityInKind: slippageMap[liquidationBonusBPS] };
 }
 
 function findRiskLevelFromParameters(
