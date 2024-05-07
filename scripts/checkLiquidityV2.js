@@ -8,7 +8,7 @@ const { computeAverageSlippageMap } = require('../src/data.interface/internal/da
 dotenv.config();
 
 async function test() {
-  const block = 37967891;
+  const block = 38198801;
   fs.writeFileSync('liquidityresult.csv', 'platform,base,quote,liquidity old, liquidity new,diff,1Inch avg slippage\n');
 
   const pairsToFetch = [];
