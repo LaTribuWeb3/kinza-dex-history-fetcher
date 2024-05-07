@@ -9,6 +9,41 @@ const { fnName, logFnDurationWithLabel } = require('../../utils/utils');
  * @param {string} fromSymbol
  * @param {string} toSymbol
  */
+function getLastMedianPriceForBlock(platform, fromSymbol, toSymbol, searchedBlock) {
+  const medianFileName = path.join(
+    DATA_DIR,
+    'precomputed',
+    'median',
+    platform,
+    `${fromSymbol}-${toSymbol}-median-prices.csv`
+  );
+  if (!fs.existsSync(medianFileName)) {
+    console.warn(`getLastMedianPriceForBlock: file ${medianFileName} does not exists`);
+    return undefined;
+  }
+
+  const allData = fs.readFileSync(medianFileName, 'utf-8').split('\n');
+
+  let price = allData[1].split(',')[1];
+
+  for (let i = 2; i < allData.length - 1; i++) {
+    const lineSplitted = allData[i].split(',');
+    const block = Number(lineSplitted[0]);
+
+    if (block > searchedBlock) break;
+
+    price = lineSplitted[1];
+  }
+
+  return Number(price);
+}
+
+/**
+ *
+ * @param {string} platform
+ * @param {string} fromSymbol
+ * @param {string} toSymbol
+ */
 function readMedianPricesFile(platform, fromSymbol, toSymbol, fromBlock = undefined, toBlock = undefined) {
   const medianFileName = path.join(
     DATA_DIR,
@@ -458,7 +493,9 @@ function getUnifiedDataForIntervalForWombatOrPancake(
   const usedPools = [];
   const unifiedDataForPools = [];
   for (const matchingFile of matchingFiles) {
-    const poolName = matchingFile.split('-')[2];
+    const pool = matchingFile.split('-')[2];
+    const poolName = [fromSymbol, toSymbol].sort((a, b) => a.localeCompare(b)).join('-') + `-${pool}-${platform}-pool`;
+
     if (alreadyUsedPools.includes(poolName)) {
       console.log(`pool ${poolName} already used, cannot reuse it`);
       continue;
@@ -581,5 +618,6 @@ module.exports = {
   getPricesAtBlockForIntervalViaPivots,
   getUnifiedDataForIntervalByFilename,
   extractDataFromUnifiedLine,
-  getDefaultSlippageMapSimple
+  getDefaultSlippageMapSimple,
+  getLastMedianPriceForBlock
 };

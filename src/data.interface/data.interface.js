@@ -6,12 +6,15 @@
 //////////// THE FETCHERS //////////////
 
 const { getPrices } = require('./internal/data.interface.price');
+const lp_solve = require('@3lden/lp_solve');
 const {
   getAverageLiquidityForInterval,
   getSlippageMapForInterval,
   getLiquidityAccrossDexes,
   getLiquidityAccrossDexesFromWBETH,
-  getLiquidityAccrossDexesToWBETH
+  getLiquidityAccrossDexesToWBETH,
+  computeAverageSlippageMap,
+  getSumSlippageMapAcrossDexes
 } = require('./internal/data.interface.liquidity');
 const { logFnDurationWithLabel } = require('../utils/utils');
 const { PLATFORMS, DEFAULT_STEP_BLOCK, LAMBDA } = require('../utils/constants');
@@ -19,9 +22,13 @@ const { rollingBiggestDailyChange } = require('../utils/volatility');
 const {
   getBlankUnifiedData,
   getUnifiedDataForInterval,
-  getDefaultSlippageMap
+  getDefaultSlippageMap,
+  getLastMedianPriceForBlock
 } = require('./internal/data.interface.utils');
-const { newAssetsForMinVolatility } = require('../global.config');
+const { newAssetsForMinVolatility, GetPairToUse, specificPivotsOverride } = require('../global.config');
+const { writeGLPMSpec, parseGLPMOutput } = require('../utils/glpm');
+
+const ALL_PIVOTS = ['USDT', 'WBNB', 'ETH'];
 
 //    _____  _   _  _______  ______  _____   ______        _____  ______     ______  _    _  _   _   _____  _______  _____  ____   _   _   _____
 //   |_   _|| \ | ||__   __||  ____||  __ \ |  ____|/\    / ____||  ____|   |  ____|| |  | || \ | | / ____||__   __||_   _|/ __ \ | \ | | / ____|
@@ -113,17 +120,504 @@ async function getRollingVolatility(platform, fromSymbol, toSymbol, web3Provider
   }
 
   const rollingVolatility = await rollingBiggestDailyChange(medianPrices, web3Provider, lambda);
-  if(newAssetsForMinVolatility.includes(fromSymbol) || newAssetsForMinVolatility.includes(toSymbol)) {
+  if (newAssetsForMinVolatility.includes(fromSymbol) || newAssetsForMinVolatility.includes(toSymbol)) {
     // set min volatility to 10%
     rollingVolatility.latest.current = Math.max(0.1, rollingVolatility.latest.current);
     rollingVolatility.latest.yesterday = Math.max(0.1, rollingVolatility.latest.yesterday);
-    for(let i = 0; i < rollingVolatility.history.length; i++) {
+    for (let i = 0; i < rollingVolatility.history.length; i++) {
       rollingVolatility.history[i].current = Math.max(0.1, rollingVolatility.history[i].current);
       rollingVolatility.history[i].yesterday = Math.max(0.1, rollingVolatility.history[i].yesterday);
     }
   }
 
   return rollingVolatility;
+}
+
+async function getLiquidityV2(platform, fromSymbol, toSymbol, atBlock) {
+  return getLiquidityAverageV2(platform, fromSymbol, toSymbol, atBlock, atBlock);
+}
+
+/**
+ *
+ * @param {*} platform
+ * @param {*} fromSymbol
+ * @param {*} toSymbol
+ * @param {*} fromBlock
+ * @param {*} toBlock
+ * @returns {Promise<{slippageMap: {[slippageBps: number]: number}}>}
+ */
+async function getLiquidityAverageV2(platform, fromSymbol, toSymbol, fromBlock, toBlock, step = 50) {
+  const startDataFetch = Date.now();
+  const start = Date.now();
+  const { actualFrom, actualTo } = GetPairToUse(fromSymbol, toSymbol);
+
+  const pivotsToUse = getPivotsToUse(actualFrom, actualTo);
+
+  // generate list of routes
+  const allPairs = getAllPairs(actualFrom, actualTo, pivotsToUse);
+
+  const prices = {};
+  prices['USDC'] = 1;
+  const usedPools = [];
+
+  let directRouteLiquidity = {};
+  if (platform == 'all') {
+    directRouteLiquidity = getSumSlippageMapAcrossDexes(
+      actualFrom,
+      actualTo,
+      fromBlock,
+      toBlock,
+      DEFAULT_STEP_BLOCK,
+      usedPools
+    );
+  } else {
+    directRouteLiquidity = getUnifiedDataForInterval(
+      platform,
+      actualFrom,
+      actualTo,
+      fromBlock,
+      toBlock,
+      DEFAULT_STEP_BLOCK,
+      usedPools
+    );
+  }
+
+  if (directRouteLiquidity && directRouteLiquidity.unifiedData) {
+    usedPools.push(...directRouteLiquidity.usedPools);
+    directRouteLiquidity = computeAverageSlippageMap(directRouteLiquidity.unifiedData);
+  } else {
+    directRouteLiquidity = undefined;
+  }
+
+  if (!prices[actualFrom]) {
+    prices[actualFrom] = getLastMedianPriceForBlock('all', actualFrom, 'USDC', toBlock);
+  }
+
+  // get all the routes liquidities
+  const pairData = {};
+  for (const pair of allPairs) {
+    let liquidityData = {};
+    if (platform == 'all') {
+      liquidityData = getSumSlippageMapAcrossDexes(
+        pair.from,
+        pair.to,
+        fromBlock,
+        toBlock,
+        DEFAULT_STEP_BLOCK,
+        usedPools
+      );
+    } else {
+      liquidityData = getUnifiedDataForInterval(
+        platform,
+        pair.from,
+        pair.to,
+        fromBlock,
+        toBlock,
+        DEFAULT_STEP_BLOCK,
+        usedPools
+      );
+    }
+
+    if (!prices[pair.from]) {
+      prices[pair.from] = getLastMedianPriceForBlock('all', pair.from, 'USDC', toBlock);
+    }
+
+    if (!prices[pair.from]) {
+      throw new Error(`Cannot find ${pair.from}/USDC price`);
+    }
+
+    if (liquidityData && liquidityData.unifiedData) {
+      usedPools.push(...liquidityData.usedPools);
+
+      liquidityData = computeAverageSlippageMap(liquidityData.unifiedData);
+
+      if (!pairData[pair.from]) {
+        pairData[pair.from] = {};
+      }
+      if (!pairData[pair.from][pair.to]) {
+        pairData[pair.from][pair.to] = {};
+      }
+
+      pairData[pair.from][pair.to] = liquidityData.slippageMap;
+    }
+  }
+
+  logFnDurationWithLabel(startDataFetch, 'data fetch duration:');
+  const result = await computeLiquidityWithSolver(
+    pivotsToUse,
+    actualFrom,
+    actualTo,
+    pairData,
+    prices,
+    directRouteLiquidity,
+    step
+  );
+  logFnDurationWithLabel(start, `p: ${platform}, [${fromSymbol}/${toSymbol}], blocks: ${toBlock - fromBlock + 1}`);
+  return result;
+}
+
+/**
+ *
+ * @param {string} platform the platform (all, balancer, uniswapv2...)
+ * @param {string} fromSymbol the base asset
+ * @param {string} toSymbol the quote asset
+ * @param {number[]} blocks the block array
+ * @param {number} avgOverBlocks
+ * @param {number} step
+ * @returns {Promise<{slippageMap: {[slippageBps: number]: number}}[]>}
+ */
+async function getLiquidityAverageV2ForDataPoints(platform, fromSymbol, toSymbol, blocks, avgOverBlocks, step = 50) {
+  const stepBlock = DEFAULT_STEP_BLOCK * 12;
+  const start = Date.now();
+  const startDataFetch = Date.now();
+  const { actualFrom, actualTo } = GetPairToUse(fromSymbol, toSymbol);
+
+  const pivotsToUse = getPivotsToUse(actualFrom, actualTo);
+
+  // generate list of routes
+  const allPairs = getAllPairs(actualFrom, actualTo, pivotsToUse);
+  const pairDataPerPoint = {};
+  const pricesPerPoint = {};
+  for (const b of blocks) {
+    pricesPerPoint[b] = {
+      USDC: 1
+    };
+
+    if (!pairDataPerPoint[b]) {
+      pairDataPerPoint[b] = {};
+    }
+  }
+  const usedPools = [];
+
+  const directRouteLiquidityPerPoint = {};
+  let directRouteLiquidity = {};
+  if (platform == 'all') {
+    directRouteLiquidity = getSumSlippageMapAcrossDexes(
+      actualFrom,
+      actualTo,
+      blocks[0] - avgOverBlocks,
+      blocks.at(-1),
+      stepBlock,
+      usedPools
+    );
+  } else {
+    directRouteLiquidity = getUnifiedDataForInterval(
+      platform,
+      actualFrom,
+      actualTo,
+      blocks[0] - avgOverBlocks,
+      blocks.at(-1),
+      stepBlock,
+      usedPools
+    );
+  }
+
+  if (directRouteLiquidity && directRouteLiquidity.unifiedData) {
+    usedPools.push(...directRouteLiquidity.usedPools);
+
+    for (const b of blocks) {
+      const pointTo = b;
+      const pointFrom = pointTo - avgOverBlocks;
+      const liquiditiesForPoint = {};
+      for (const [block, liquidityData] of Object.entries(directRouteLiquidity.unifiedData)) {
+        if (block < pointFrom) {
+          continue;
+        }
+        if (block > pointTo) {
+          break;
+        }
+
+        liquiditiesForPoint[block] = liquidityData;
+      }
+
+      if (!pricesPerPoint[b][actualFrom]) {
+        pricesPerPoint[b][actualFrom] = getLastMedianPriceForBlock('all', actualFrom, 'USDC', pointTo);
+      }
+
+      directRouteLiquidityPerPoint[b] = computeAverageSlippageMap(liquiditiesForPoint);
+      // console.log(`${p}: ${directRouteLiquidityPerPoint[p].slippageMap[500].base}`);
+    }
+  } else {
+    // if no direct liquidity, stored undefined
+    for (const b of blocks) {
+      directRouteLiquidityPerPoint[b] = undefined;
+    }
+  }
+
+  // get all the routes liquidities
+  for (const pair of allPairs) {
+    let liquidityData = {};
+    if (platform == 'all') {
+      liquidityData = getSumSlippageMapAcrossDexes(
+        pair.from,
+        pair.to,
+        blocks[0] - avgOverBlocks,
+        blocks.at(-1),
+        stepBlock,
+        usedPools
+      );
+    } else {
+      liquidityData = getUnifiedDataForInterval(
+        platform,
+        pair.from,
+        pair.to,
+        blocks[0] - avgOverBlocks,
+        blocks.at(-1),
+        stepBlock,
+        usedPools
+      );
+    }
+
+    if (liquidityData && liquidityData.unifiedData) {
+      usedPools.push(...liquidityData.usedPools);
+
+      for (const b of blocks) {
+        const pointTo = b;
+        const pointFrom = pointTo - avgOverBlocks;
+        const liquiditiesForPoint = {};
+        for (const [block, liq] of Object.entries(liquidityData.unifiedData)) {
+          if (block < pointFrom) {
+            continue;
+          }
+          if (block > pointTo) {
+            break;
+          }
+
+          liquiditiesForPoint[block] = liq;
+        }
+
+        if (!pairDataPerPoint[b][pair.from]) {
+          pairDataPerPoint[b][pair.from] = {};
+        }
+        if (!pairDataPerPoint[b][pair.from][pair.to]) {
+          pairDataPerPoint[b][pair.from][pair.to] = {};
+        }
+
+        if (!pricesPerPoint[b][pair.from]) {
+          pricesPerPoint[b][pair.from] = getLastMedianPriceForBlock('all', pair.from, 'USDC', pointTo);
+        }
+
+        if (!pricesPerPoint[b][pair.from]) {
+          throw new Error(`Cannot find ${pair.from}/USDC price`);
+        }
+
+        pairDataPerPoint[b][pair.from][pair.to] = computeAverageSlippageMap(liquiditiesForPoint).slippageMap;
+      }
+    }
+  }
+
+  logFnDurationWithLabel(startDataFetch, 'data fetch duration:');
+  const liquidities = {}; // will store the liquidities (solver result) for every point of nbPoints
+  for (const b of blocks) {
+    const directRouteLiquidity = directRouteLiquidityPerPoint[b];
+    const pairData = pairDataPerPoint[b];
+    const prices = pricesPerPoint[b];
+    // console.time('computeLiquidityWithSolver');
+    const result = await computeLiquidityWithSolver(
+      pivotsToUse,
+      actualFrom,
+      actualTo,
+      pairData,
+      prices,
+      directRouteLiquidity,
+      step
+    );
+    // console.timeEnd('computeLiquidityWithSolver');
+    liquidities[b] = result;
+  }
+
+  logFnDurationWithLabel(
+    start,
+    `p: ${platform}, [${fromSymbol}/${toSymbol}], blocks: ${blocks.at(-1) - blocks[0] + 1}`
+  );
+  return liquidities;
+}
+
+async function computeLiquidityWithSolver(
+  pivotsToUse,
+  fromSymbol,
+  toSymbol,
+  pairData,
+  prices,
+  directRouteLiquidity,
+  step
+) {
+  // check if routes exists from actualFrom=>anything
+  // and from anything=>actualTo
+  // if no routes available from or to, ignore solver and return direct route data
+  let atLeastOneExitRoute = false;
+  for (const from of Object.keys(pairData)) {
+    if (atLeastOneExitRoute) {
+      break;
+    }
+    for (const to of Object.keys(pairData[from])) {
+      if (to == toSymbol) {
+        atLeastOneExitRoute = true;
+        break;
+      }
+    }
+  }
+
+  const liquidity = {
+    slippageMap: {}
+  };
+  if (!pairData[fromSymbol] || !atLeastOneExitRoute) {
+    if (!directRouteLiquidity) {
+      return undefined;
+    } else {
+      for (let targetSlippage = step; targetSlippage <= 2000; targetSlippage += step) {
+        liquidity.slippageMap[targetSlippage] = directRouteLiquidity.slippageMap[targetSlippage].base;
+      }
+
+      return liquidity;
+    }
+  }
+
+  const promises = [];
+  for (let targetSlippage = step; targetSlippage <= 2000; targetSlippage += step) {
+    // call the linear programming solver
+    const solverParameters = {
+      assets: pivotsToUse.concat([fromSymbol, toSymbol]),
+      origin: fromSymbol,
+      target: toSymbol,
+      slippageStepBps: 50,
+      targetSlippageBps: targetSlippage
+    };
+
+    const formattedLiquidity = {};
+
+    for (const base of Object.keys(pairData)) {
+      for (const quote of Object.keys(pairData[base])) {
+        for (const slippageBps of Object.keys(pairData[base][quote])) {
+          // if(slippageBps > targetSlippage) continue;
+          if (!formattedLiquidity[base]) {
+            formattedLiquidity[base] = {};
+          }
+
+          if (!formattedLiquidity[base][quote]) {
+            formattedLiquidity[base][quote] = [];
+          }
+
+          formattedLiquidity[base][quote].push(pairData[base][quote][slippageBps].base * prices[base]);
+        }
+
+        formattedLiquidity[base][quote] = formattedLiquidity[base][quote].map((e, i, a) =>
+          i === 0 ? e : e - a[i - 1]
+        );
+      }
+    }
+    // console.log(formattedLiquidity);
+    const glpmSpec = writeGLPMSpec(solverParameters, formattedLiquidity);
+    // console.log(glpmSpec);
+    // console.time('executeGLPSol');
+    const promise = lp_solve.executeGLPSol(glpmSpec);
+    // await promise;
+    promises.push(promise);
+  }
+
+  const results = await Promise.all(promises);
+  let cursor = 0;
+  for (let targetSlippage = step; targetSlippage <= 2000; targetSlippage += step) {
+    const glpmResult = results[cursor++];
+    // console.timeEnd('executeGLPSol');
+    const liquidityForTargetSlippage = parseGLPMOutput(glpmResult, fromSymbol);
+    liquidity.slippageMap[targetSlippage] = 0;
+    if (directRouteLiquidity) {
+      liquidity.slippageMap[targetSlippage] +=
+        directRouteLiquidity.slippageMap[targetSlippage].base * prices[fromSymbol];
+    }
+
+    liquidity.slippageMap[targetSlippage] += liquidityForTargetSlippage;
+
+    liquidity.slippageMap[targetSlippage] /= prices[fromSymbol];
+  }
+
+  // console.log(actualFrom, actualTo, liquidity);
+  return liquidity;
+}
+
+function getPivotsToUse(fromSymbol, toSymbol) {
+  let basePivot = ALL_PIVOTS;
+
+  let pivotsOverride = specificPivotsOverride[fromSymbol];
+  if (pivotsOverride !== undefined) {
+    basePivot = pivotsOverride;
+  }
+
+  pivotsOverride = specificPivotsOverride[toSymbol];
+
+  if (pivotsOverride !== undefined) {
+    basePivot = pivotsOverride;
+  }
+
+  const pivotsToUse = [];
+  for (const pivot of basePivot) {
+    if (pivot == fromSymbol || pivot == toSymbol) {
+      // do nothing
+    } else {
+      pivotsToUse.push(pivot);
+    }
+  }
+
+
+  return pivotsToUse;
+}
+function getAllPairs(fromSymbol, toSymbol, pivotsToUse) {
+  const allPairs = [];
+  for (const pivot of pivotsToUse) {
+    allPairs.push({
+      from: fromSymbol,
+      to: pivot
+    });
+  }
+
+  for (let assetIn of pivotsToUse) {
+    for (let assetOut of pivotsToUse) {
+      if (assetIn == assetOut) continue;
+      allPairs.push({
+        from: assetIn,
+        to: assetOut
+      });
+    }
+  }
+
+  for (const pivot of pivotsToUse) {
+    allPairs.push({
+      from: pivot,
+      to: toSymbol
+    });
+  }
+
+  return allPairs;
+}
+
+async function getRollingVolatilityAndPrices(platform, fromSymbol, toSymbol, web3Provider, lambda = LAMBDA) {
+  const { actualFrom, actualTo } = GetPairToUse(fromSymbol, toSymbol);
+  // find the median file
+  const medianPrices = getPrices(platform, actualFrom, actualTo);
+  if (!medianPrices || medianPrices.length == 0) {
+    console.warn(`No median prices for ${platform}, ${actualFrom}, ${actualTo}`);
+    return {
+      volatility: undefined,
+      prices: undefined
+    };
+  }
+
+  const rollingVolatility = await rollingBiggestDailyChange(medianPrices, web3Provider, lambda);
+  if (newAssetsForMinVolatility.includes(fromSymbol) || newAssetsForMinVolatility.includes(toSymbol)) {
+    // set min volatility to 10%
+    rollingVolatility.latest.current = Math.max(0.1, rollingVolatility.latest.current);
+    rollingVolatility.latest.yesterday = Math.max(0.1, rollingVolatility.latest.yesterday);
+    for (let i = 0; i < rollingVolatility.history.length; i++) {
+      rollingVolatility.history[i].current = Math.max(0.1, rollingVolatility.history[i].current);
+      rollingVolatility.history[i].yesterday = Math.max(0.1, rollingVolatility.history[i].yesterday);
+    }
+  }
+
+  return {
+    volatility: rollingVolatility,
+    prices: medianPrices
+  };
 }
 
 //    _    _  _______  _____  _        _____
@@ -145,4 +639,13 @@ function checkPlatform(platform) {
   }
 }
 
-module.exports = { getAverageLiquidity, getLiquidity, getRollingVolatility, getLiquidityAll };
+module.exports = {
+  getAverageLiquidity,
+  getLiquidity,
+  getRollingVolatility,
+  getLiquidityAll,
+  getRollingVolatilityAndPrices,
+  getLiquidityAverageV2ForDataPoints,
+  getLiquidityV2,
+  getLiquidityAverageV2
+};
