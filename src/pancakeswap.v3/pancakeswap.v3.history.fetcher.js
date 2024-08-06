@@ -68,7 +68,7 @@ async function pancakeswapV3HistoryFetcher(onlyOnce = false) {
       console.log(`minStartBlock is ${minStartBlock}`);
 
       console.log(`${fnName()}: getting pools to fetch`);
-      const poolsToFetch = await getAllPoolsToFetch(univ3Factory, web3Provider);
+      const poolsToFetch = await retry(async () => getAllPoolsToFetch(univ3Factory, web3Provider), [], 0, 10); // await getAllPoolsToFetch(univ3Factory, web3Provider);
       console.log(
         `${fnName()}: found ${poolsToFetch.length} pools to fetch from ${pairsToFetch.length} pairs in config`
       );

@@ -6,7 +6,7 @@ dotenv.config();
 
 const univ3Config = require('./pancakeswap.v3.config');
 const { GetContractCreationBlockNumber } = require('../utils/web3.utils');
-const { fnName, sleep, roundTo, readLastLine } = require('../utils/utils');
+const { fnName, sleep, roundTo, readLastLine, retry } = require('../utils/utils');
 const { getConfTokenBySymbol, normalize } = require('../utils/token.utils');
 const { RecordMonitoring } = require('../utils/monitoring');
 const { DATA_DIR } = require('../utils/constants');
@@ -59,7 +59,7 @@ async function pancakeswapV3PriceHistoryFetcher(onlyOnce = false) {
       const currentBlock = (await web3Provider.getBlockNumber()) - 10;
 
       console.log(`${fnName()}: getting pools to fetch`);
-      const poolsToFetch = await getAllPoolsToFetch(univ3Factory, web3Provider);
+      const poolsToFetch = await retry(async () => getAllPoolsToFetch(univ3Factory, web3Provider), [], 0, 10);
       console.log(
         `${fnName()}: found ${poolsToFetch.length} pools to fetch from ${pairsToFetch.length} pairs in config`
       );
