@@ -63,7 +63,17 @@ const tokens = {
     decimals: 18,
     address: '0x2416092f143378750bb29b79eD961ab195CcEea5',
     dustAmount: 0.00001
-  }
+  },
+  xPufETH: {
+    decimals: 18,
+    address: '0x64274835D88F5c0215da8AADd9A5f2D2A2569381',
+    dustAmount: 0.00001
+  },
+  SolvBTC: {
+    decimals: 18,
+    address: '0x4aae823a6a0b376De6A78e74eCC5b079d38cBCf7',
+    dustAmount: 0.000001
+  },
 };
 // goes both ways
 const watchedPairs = {
@@ -154,7 +164,12 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'SolvBTC',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   USDC: [
     {
@@ -233,7 +248,12 @@ const watchedPairs = {
       quote: 'ezETH',
       pivots: undefined,
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'xPufETH',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
   ],
   USDT: [
     {
