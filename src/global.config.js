@@ -74,6 +74,11 @@ const tokens = {
     address: '0x4aae823a6a0b376De6A78e74eCC5b079d38cBCf7',
     dustAmount: 0.000001
   },
+  Cake: {
+    decimals: 18,
+    address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+    dustAmount: 0.001
+  }
 };
 // goes both ways
 const watchedPairs = {
@@ -120,6 +125,11 @@ const watchedPairs = {
     },
     {
       quote: 'slisBNB',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
       pivots: undefined,
       exportToInternalDashboard: true
     }
@@ -280,6 +290,11 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
   FDUSD: [
@@ -335,7 +350,7 @@ const watchedPairs = {
   ]
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH', 'xPufETH', 'SolvBTC', 'Cake'];
 
 const newAssetsForMinVolatility = ['ezETH'];
 
