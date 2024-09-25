@@ -18,7 +18,8 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
-    'FDUSD'
+    'FDUSD',
+    'SolvBTC'
   ],
   ETH: [
     'USDC',
@@ -28,7 +29,8 @@ const pairsToCompute = {
     'wBETH',
     'lisUSD',
     'FDUSD',
-    'ezETH'
+    'ezETH',
+    'xPufETH'
   ],
   WBNB: [
     'USDC',
@@ -46,7 +48,8 @@ const pairsToCompute = {
     'ETH',
     'WBNB',
     'lisUSD',
-    'FDUSD'
+    'FDUSD',
+    'xPufETH'
   ],
   lisUSD: [
     'USDC',
