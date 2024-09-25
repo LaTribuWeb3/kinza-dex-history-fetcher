@@ -8,7 +8,8 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
-    'FDUSD'
+    'FDUSD',
+    'Cake'
   ],
   USDT: ['USDC'],
   BTCB: [
@@ -19,7 +20,8 @@ const pairsToCompute = {
     'wBETH',
     'lisUSD',
     'FDUSD',
-    'SolvBTC'
+    'SolvBTC',
+    'Cake'
   ],
   ETH: [
     'USDC',
@@ -30,7 +32,8 @@ const pairsToCompute = {
     'lisUSD',
     'FDUSD',
     'ezETH',
-    'xPufETH'
+    'xPufETH',
+    'Cake'
   ],
   WBNB: [
     'USDC',
@@ -39,7 +42,8 @@ const pairsToCompute = {
     'ETH',
     'wBETH',
     'lisUSD',
-    'FDUSD'
+    'FDUSD',
+    'Cake'
   ],
   wBETH: [
     'USDC',
@@ -49,11 +53,13 @@ const pairsToCompute = {
     'WBNB',
     'lisUSD',
     'FDUSD',
-    'xPufETH'
+    'xPufETH',
+    'Cake'
   ],
   lisUSD: [
     'USDC',
     'USDT',
+    'Cake'
   ],
   FDUSD: [
     'USDC',
@@ -63,9 +69,11 @@ const pairsToCompute = {
     'WBNB',
     'wBETH',
     'lisUSD',
+    'Cake'
   ],
   ezETH: [
     'ETH',
+    'Cake'
   ],
 };
 
