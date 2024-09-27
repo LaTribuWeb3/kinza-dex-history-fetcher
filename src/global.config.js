@@ -231,7 +231,12 @@ const watchedPairs = {
       quote: 'Cake',
       pivots: undefined,
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'SolvBTC',
+      pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
 
   ],
   ETH: [
