@@ -180,6 +180,11 @@ const watchedPairs = {
       pivots: undefined,
       exportToInternalDashboard: true
     },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    }
   ],
   USDC: [
     {
@@ -221,7 +226,13 @@ const watchedPairs = {
       quote: 'ezETH',
       pivots: ['ETH'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
+
   ],
   ETH: [
     {
@@ -264,6 +275,11 @@ const watchedPairs = {
       pivots: undefined,
       exportToInternalDashboard: true
     },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    }
   ],
   USDT: [
     {
@@ -317,6 +333,11 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
   wBETH: [
@@ -334,6 +355,11 @@ const watchedPairs = {
       quote: 'slisBNB',
       pivots: ['ETH', 'WBNB'],
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
+      pivots: undefined,
+      exportToInternalDashboard: true
     }
   ],
   lisUSD: [
@@ -345,6 +371,11 @@ const watchedPairs = {
     {
       quote: 'slisBNB',
       pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'Cake',
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ]
