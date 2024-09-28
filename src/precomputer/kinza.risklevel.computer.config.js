@@ -73,7 +73,6 @@ const pairsToCompute = {
   ],
   ezETH: [
     'ETH',
-    'Cake'
   ],
 };
 
