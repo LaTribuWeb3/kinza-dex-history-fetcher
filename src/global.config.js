@@ -234,10 +234,14 @@ const watchedPairs = {
     },
     {
       quote: 'SolvBTC',
-      pivots: ['WBNB'],
+      pivots: ['BTCB'],
       exportToInternalDashboard: true
     },
-
+    {
+      quote: 'xPufETH',
+      pivots: ['ETH'],
+      exportToInternalDashboard: true
+    }
   ],
   ETH: [
     {
@@ -363,7 +367,12 @@ const watchedPairs = {
     },
     {
       quote: 'Cake',
-      pivots: undefined,
+      pivots: ['WBNB'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'xPufETH',
+      pivots: ['ETH'],
       exportToInternalDashboard: true
     }
   ],
