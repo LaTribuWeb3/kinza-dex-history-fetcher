@@ -124,16 +124,32 @@ async function computeSubMarket(base, quote) {
     baseTokenAddress
   ]);
 
-  const baseTokenInfo = await axios.get(
-    'https://coins.llama.fi/prices/current/bsc:' + baseTokenAddress + ',bsc:' + quoteTokenAddress
-  );
+  let baseTokenInfo;
+
+  if (base == 'xPufETH') {
+    baseTokenInfo = await axios.get(
+      'https://coins.llama.fi/prices/current/coingecko:pufeth' + ',bsc:' + quoteTokenAddress)
+  }
+  if (quote == 'xPufETH') {
+    baseTokenInfo = await axios.get(
+      'https://coins.llama.fi/prices/current/bsc:' + baseTokenAddress + ',coingecko:pufeth'
+    );
+  }
+  else {
+    baseTokenInfo = await axios.get(
+      'https://coins.llama.fi/prices/current/bsc:' + baseTokenAddress + ',bsc:' + quoteTokenAddress
+    );
+  }
 
   let riskLevel = 0.0;
 
   const liquidationBonusBps = reserveDataConfigurationBase.liquidationBonus.toNumber() - 10000;
 
-  const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
-  const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
+  const baseTokenPrice = base == 'xPufETH' ? baseTokenInfo.data.coins['coingecko:pufeth'].price : baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price;
+  const quoteTokenPrice = quote == 'xPufETH' ? baseTokenInfo.data.coins['coingecko:pufeth'].price : baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price;
+
+  const baseSupplyCapUSD = baseReserveCaps.supplyCap.toNumber() * baseTokenPrice;
+  const quoteBorrowCapUSD = quoteReserveCaps.borrowCap.toNumber() * quoteTokenPrice;
   const capToUseUsd = Math.min(baseSupplyCapUSD, quoteBorrowCapUSD);
   const liquidationThresholdBps = reserveDataConfigurationBase.liquidationThreshold.toNumber();
   const ltvBps = reserveDataConfigurationBase.ltv.toNumber();
@@ -162,8 +178,8 @@ async function computeSubMarket(base, quote) {
     borrowCapInKind: quoteReserveCaps.borrowCap.toNumber(),
     volatility: selectedVolatility,
     liquidity: liquidity,
-    basePrice: baseTokenInfo.data.coins['bsc:' + baseTokenAddress].price,
-    quotePrice: baseTokenInfo.data.coins['bsc:' + quoteTokenAddress].price
+    basePrice: baseTokenPrice,
+    quotePrice: quoteTokenPrice
   };
 
   console.log(`computeSubMarket[${base}/${quote}]: result:`, pairValue);
@@ -209,6 +225,6 @@ function findRiskLevelFromParameters(
   return r;
 }
 
-// precomputeRiskLevelKinza();
+precomputeRiskLevelKinza();
 
 module.exports = { precomputeRiskLevelKinza };
