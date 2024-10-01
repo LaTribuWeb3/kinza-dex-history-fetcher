@@ -372,7 +372,7 @@ const watchedPairs = {
     },
     {
       quote: 'Cake',
-      pivots: ['WBNB'],
+      pivots: ['ETH'],
       exportToInternalDashboard: true
     },
     {
