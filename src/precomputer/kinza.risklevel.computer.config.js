@@ -21,7 +21,8 @@ const pairsToCompute = {
     'lisUSD',
     'FDUSD',
     'SolvBTC',
-    'Cake'
+    'Cake',
+    'SolvBTCBBN'
   ],
   ETH: [
     'USDC',
