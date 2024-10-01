@@ -407,7 +407,7 @@ const watchedPairs = {
   ]
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH', 'xPufETH', 'SolvBTC', 'Cake', 'SolvBTCBBN'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH', 'xPufETH', 'SolvBTC', 'Cake'];
 
 const newAssetsForMinVolatility = ['ezETH'];
 
