@@ -78,6 +78,11 @@ const tokens = {
     decimals: 18,
     address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
     dustAmount: 0.001
+  },
+  SolvBTCBBN: {
+    decimals: 18,
+    address: '0x1346b618dC92810EC74163e4c27004c921D446a5',
+    dustAmount: 0.000001
   }
 };
 // goes both ways
@@ -392,10 +397,17 @@ const watchedPairs = {
       pivots: undefined,
       exportToInternalDashboard: true
     }
+  ],
+  SolvBTC: [
+    {
+      quote: 'SolvBTCBBN',
+      pivots: undefined,
+      exportToInternalDashboard: true
+    }
   ]
 };
 
-const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH', 'xPufETH', 'SolvBTC', 'Cake'];
+const pairsToFetch = ['WBNB', 'USDT', 'ETH', 'BTCB', 'USDC', 'FDUSD', 'SnBNB', 'wBETH', 'lisUSD', 'slisBNB', 'ezETH', 'xPufETH', 'SolvBTC', 'Cake', 'SolvBTCBBN'];
 
 const newAssetsForMinVolatility = ['ezETH'];
 
