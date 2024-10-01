@@ -22,7 +22,6 @@ const pairsToCompute = {
     'FDUSD',
     'SolvBTC',
     'Cake',
-    'SolvBTCBBN'
   ],
   ETH: [
     'USDC',
@@ -75,6 +74,9 @@ const pairsToCompute = {
   ezETH: [
     'ETH',
   ],
+  solvBTC: [
+    'SolvBTCBBN'
+  ]
 };
 
 const protocolDataProviderABI = [
