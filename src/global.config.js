@@ -401,7 +401,7 @@ const watchedPairs = {
   SolvBTC: [
     {
       quote: 'SolvBTCBBN',
-      pivots: undefined,
+      pivots: ['BTCB'],
       exportToInternalDashboard: true
     }
   ]
