@@ -539,15 +539,28 @@ async function computeLiquidityWithSolver(
 function getPivotsToUse(fromSymbol, toSymbol) {
   let basePivot = ALL_PIVOTS;
 
-  let pivotsOverride = specificPivotsOverride[fromSymbol];
-  if (pivotsOverride !== undefined) {
-    basePivot = pivotsOverride;
-  }
+  const pairKey = `${fromSymbol}/${toSymbol}`;
 
-  pivotsOverride = specificPivotsOverride[toSymbol];
-
+  let pivotsOverride = specificPivotsOverride[pairKey];
   if (pivotsOverride !== undefined) {
+    console.log(`For ${fromSymbol}/${toSymbol}: using specific pivot for ${pairKey}`);
     basePivot = pivotsOverride;
+  } else {
+    const pairKey = `${fromSymbol}/*`;
+    pivotsOverride = specificPivotsOverride[pairKey];
+    if (pivotsOverride !== undefined) {
+      console.log(`For ${fromSymbol}/${toSymbol}: using specific pivot for ${pairKey}`);
+      basePivot = pivotsOverride;
+    } else {
+      const pairKey = `*/${toSymbol}`;
+      pivotsOverride = specificPivotsOverride[pairKey];
+      if (pivotsOverride !== undefined) {
+        console.log(`For ${fromSymbol}/${toSymbol}: using specific pivot for ${pairKey}`);
+        basePivot = pivotsOverride;
+      }  else {
+        console.log(`For ${fromSymbol}/${toSymbol}: using default pivots`);
+      }
+    }
   }
 
   const pivotsToUse = [];

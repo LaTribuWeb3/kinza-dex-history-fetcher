@@ -189,7 +189,12 @@ const watchedPairs = {
       quote: 'Cake',
       pivots: undefined,
       exportToInternalDashboard: true
-    }
+    },
+    {
+      quote: 'SolvBTCBNB',
+      pivots: ['SolvBTC'],
+      exportToInternalDashboard: true
+    },
   ],
   USDC: [
     {
@@ -245,6 +250,11 @@ const watchedPairs = {
     {
       quote: 'xPufETH',
       pivots: ['ETH'],
+      exportToInternalDashboard: true
+    },
+    {
+      quote: 'SolvBTCBBN',
+      pivots: ['BTCB', 'SolvBTC'],
       exportToInternalDashboard: true
     }
   ],
@@ -325,6 +335,11 @@ const watchedPairs = {
       quote: 'Cake',
       pivots: undefined,
       exportToInternalDashboard: true
+    },
+    {
+      quote: 'SolvBTCBBN',
+      pivots: ['SolvBTC', 'BTCB'],
+      exportToInternalDashboard: true
     }
   ],
   FDUSD: [
@@ -401,7 +416,7 @@ const watchedPairs = {
   SolvBTC: [
     {
       quote: 'SolvBTCBBN',
-      pivots: ['BTCB'],
+      pivots: undefined,
       exportToInternalDashboard: true
     }
   ]
@@ -425,7 +440,12 @@ function GetPairToUse(from, to) {
   return { actualFrom, actualTo };
 }
 
-const specificPivotsOverride = {};
+const specificPivotsOverride = {
+  'SolvBTCBBN/SolvBTC': [],
+  'SolvBTCBBN/*': ['SolvBTC', 'BTCB', 'USDT'],
+  'SolvBTC/SolvBTCBBN': [],
+  '*/SolvBTCBBN': ['USDT', 'BTCB', 'SolvBTC']
+};
 
 module.exports = {
   tokens,
