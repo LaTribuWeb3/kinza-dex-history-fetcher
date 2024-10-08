@@ -29,10 +29,18 @@ function normalize(amount, decimals) {
  * @returns {{symbol: string, decimals: number, address: string, dustAmount: number}} token configuration
  */
 function getConfTokenBySymbol(symbol) {
-  const tokenConf = tokens[symbol];
+  let tokenConf = tokens[symbol];
+  
+  // If not found, try with capitalized first letter
+  if (!tokenConf) {
+    const capitalizedSymbol = symbol.charAt(0).toUpperCase() + symbol.slice(1);
+    tokenConf = tokens[capitalizedSymbol];
+  }
+  
   if (!tokenConf) {
     throw new Error(`Cannot find token with symbol ${symbol}`);
   }
+  
   // add symbol to config
   tokenConf.symbol = symbol;
   return tokenConf;
