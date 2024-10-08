@@ -74,7 +74,7 @@ const pairsToCompute = {
   ezETH: [
     'ETH',
   ],
-  solvBTC: [
+  SolvBTC: [
     'SolvBTCBBN'
   ]
 };

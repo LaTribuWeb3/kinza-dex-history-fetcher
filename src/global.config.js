@@ -191,7 +191,7 @@ const watchedPairs = {
       exportToInternalDashboard: true
     },
     {
-      quote: 'SolvBTCBNB',
+      quote: 'SolvBTCBBN',
       pivots: ['SolvBTC'],
       exportToInternalDashboard: true
     },
